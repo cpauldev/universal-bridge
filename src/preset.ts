@@ -163,7 +163,15 @@ type FrameworkAdapterKind =
 type FrameworkActivationStore = {
   counters: Map<FrameworkAdapterKind, number>;
   latestByFramework: Map<FrameworkAdapterKind, number>;
+  activeByServer: WeakMap<object, Map<FrameworkAdapterKind, number>>;
 };
+
+type FrameworkActivation =
+  | {
+      isActive: () => boolean;
+      token: number;
+    }
+  | undefined;
 
 const FRAMEWORK_ACTIVATION_SYMBOL = Symbol.for("universa.framework.activation");
 
@@ -176,6 +184,7 @@ function getFrameworkActivationStore(): FrameworkActivationStore {
     runtimeGlobal[FRAMEWORK_ACTIVATION_SYMBOL] = {
       counters: new Map<FrameworkAdapterKind, number>(),
       latestByFramework: new Map<FrameworkAdapterKind, number>(),
+      activeByServer: new WeakMap<object, Map<FrameworkAdapterKind, number>>(),
     };
   }
 
@@ -185,7 +194,7 @@ function getFrameworkActivationStore(): FrameworkActivationStore {
 function reserveFrameworkActivation(
   framework: FrameworkAdapterKind,
   composition: UniversaCompositionMode,
-): (() => boolean) | undefined {
+): FrameworkActivation {
   if (composition === "local") return undefined;
 
   const store = getFrameworkActivationStore();
@@ -193,7 +202,10 @@ function reserveFrameworkActivation(
   store.counters.set(framework, token);
   store.latestByFramework.set(framework, token);
 
-  return () => store.latestByFramework.get(framework) === token;
+  return {
+    isActive: () => store.latestByFramework.get(framework) === token,
+    token,
+  };
 }
 
 function withFrameworkActivation<T extends object>(
@@ -209,18 +221,42 @@ function withFrameworkActivation<T extends object>(
 
 type VitePlugin = ReturnType<typeof createUniversaVitePlugin>;
 function guardVitePlugin(
+  framework: FrameworkAdapterKind,
   plugin: VitePlugin,
   isFrameworkActive?: () => boolean,
+  activationToken?: number,
 ): VitePlugin {
   if (!isFrameworkActive) return plugin;
 
   return {
     ...plugin,
-    configureServer: async (...args: unknown[]) => {
-      if (!isFrameworkActive()) return;
+    configureServer: async (server: unknown, ...args: unknown[]) => {
+      if (
+        activationToken !== undefined &&
+        server !== null &&
+        typeof server === "object"
+      ) {
+        const store = getFrameworkActivationStore();
+        const serverActivations =
+          store.activeByServer.get(server) ??
+          new Map<FrameworkAdapterKind, number>();
+        store.activeByServer.set(server, serverActivations);
+
+        const activeToken = serverActivations.get(framework);
+        if (activeToken !== undefined && activeToken !== activationToken) {
+          return;
+        }
+
+        if (activeToken === undefined) {
+          serverActivations.set(framework, activationToken);
+        }
+      } else if (!isFrameworkActive()) {
+        return;
+      }
+
       return (
         plugin as { configureServer?: (...args: unknown[]) => unknown }
-      ).configureServer?.(...args);
+      ).configureServer?.(server, ...args);
     },
   } as VitePlugin;
 }
@@ -376,17 +412,22 @@ export function createUniversaPreset(
 
   return {
     vite: (options = {}) => {
-      const isFrameworkActive = reserveFrameworkActivation(
+      const activation = reserveFrameworkActivation(
         "vite",
         registration.composition,
       );
       const entries = getFrameworkRegistrations(options);
       const plugins = entries.map((entry) =>
         guardVitePlugin(
+          "vite",
           createUniversaVitePlugin(
-            withFrameworkActivation(entry.effectiveOptions, isFrameworkActive),
+            withFrameworkActivation(
+              entry.effectiveOptions,
+              activation?.isActive,
+            ),
           ),
-          isFrameworkActive,
+          activation?.isActive,
+          activation?.token,
         ),
       );
       return plugins.length === 1 ? plugins[0] : plugins;
@@ -395,7 +436,7 @@ export function createUniversaPreset(
       nextConfig: T,
       options: UniversaNextOptions = {},
     ): T {
-      const isFrameworkActive = reserveFrameworkActivation(
+      const activation = reserveFrameworkActivation(
         "next",
         registration.composition,
       );
@@ -404,38 +445,41 @@ export function createUniversaPreset(
         (config, entry) =>
           withUniversaNext(
             config,
-            withFrameworkActivation(entry.effectiveOptions, isFrameworkActive),
+            withFrameworkActivation(
+              entry.effectiveOptions,
+              activation?.isActive,
+            ),
           ),
         nextConfig,
       );
     },
     nuxt: (options = {}) => {
-      const isFrameworkActive = reserveFrameworkActivation(
+      const activation = reserveFrameworkActivation(
         "nuxt",
         registration.composition,
       );
       const entries = getFrameworkRegistrations(options);
       const modules = entries.map((entry) =>
         createUniversaNuxtModule(
-          withFrameworkActivation(entry.effectiveOptions, isFrameworkActive),
+          withFrameworkActivation(entry.effectiveOptions, activation?.isActive),
         ),
       );
-      return guardNuxtModule(composeNuxtModules(modules), isFrameworkActive);
+      return guardNuxtModule(composeNuxtModules(modules), activation?.isActive);
     },
     astro: (options = {}) => {
-      const isFrameworkActive = reserveFrameworkActivation(
+      const activation = reserveFrameworkActivation(
         "astro",
         registration.composition,
       );
       const entries = getFrameworkRegistrations(options);
       const integrations = entries.map((entry) =>
         createUniversaAstroIntegration(
-          withFrameworkActivation(entry.effectiveOptions, isFrameworkActive),
+          withFrameworkActivation(entry.effectiveOptions, activation?.isActive),
         ),
       );
       return guardAstroIntegration(
         composeAstroIntegrations(integrations),
-        isFrameworkActive,
+        activation?.isActive,
       );
     },
     angularCli: {
@@ -473,7 +517,7 @@ export function createUniversaPreset(
         config: TConfig,
         options: WebpackUniversaOptions = {},
       ) => {
-        const isFrameworkActive = reserveFrameworkActivation(
+        const activation = reserveFrameworkActivation(
           "webpack",
           registration.composition,
         );
@@ -483,7 +527,10 @@ export function createUniversaPreset(
         for (const entry of entries) {
           nextConfig = withUniversaWebpackDevServer(
             nextConfig,
-            withFrameworkActivation(entry.effectiveOptions, isFrameworkActive),
+            withFrameworkActivation(
+              entry.effectiveOptions,
+              activation?.isActive,
+            ),
           ) as TConfig & WebpackDevServerConfig<TMiddlewares>;
         }
         return nextConfig;
@@ -497,7 +544,7 @@ export function createUniversaPreset(
         config: TConfig,
         options: RsbuildUniversaOptions = {},
       ) => {
-        const isFrameworkActive = reserveFrameworkActivation(
+        const activation = reserveFrameworkActivation(
           "rsbuild",
           registration.composition,
         );
@@ -506,7 +553,10 @@ export function createUniversaPreset(
         for (const entry of entries) {
           nextConfig = withUniversaRsbuild(
             nextConfig,
-            withFrameworkActivation(entry.effectiveOptions, isFrameworkActive),
+            withFrameworkActivation(
+              entry.effectiveOptions,
+              activation?.isActive,
+            ),
           ) as TConfig & RsbuildConfig<TMiddlewares>;
         }
         return nextConfig;
@@ -520,7 +570,7 @@ export function createUniversaPreset(
         config: TConfig,
         options: RspackUniversaOptions = {},
       ) => {
-        const isFrameworkActive = reserveFrameworkActivation(
+        const activation = reserveFrameworkActivation(
           "rspack",
           registration.composition,
         );
@@ -529,7 +579,10 @@ export function createUniversaPreset(
         for (const entry of entries) {
           nextConfig = withUniversaRspack(
             nextConfig,
-            withFrameworkActivation(entry.effectiveOptions, isFrameworkActive),
+            withFrameworkActivation(
+              entry.effectiveOptions,
+              activation?.isActive,
+            ),
           ) as TConfig & RspackConfig<TMiddlewares>;
         }
         return nextConfig;

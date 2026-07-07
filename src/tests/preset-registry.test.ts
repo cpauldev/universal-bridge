@@ -143,7 +143,7 @@ describe("preset registry + namespacing", () => {
     expect(Array.isArray(localPlugins)).toBe(false);
   });
 
-  it("keeps only the latest framework call active to avoid duplicate Vite wiring", async () => {
+  it("keeps one active Vite wiring per server when config is evaluated more than once", async () => {
     const first = createUniversaPreset({
       identity: { packageName: "@acme/latest-a" },
     });
@@ -162,7 +162,7 @@ describe("preset registry + namespacing", () => {
 
     const fixture = createMiddlewareAdapterServerFixture();
     await stalePlugin?.configureServer?.(fixture.server as never);
-    expect(fixture.getMiddlewareCount()).toBe(0);
+    expect(fixture.getMiddlewareCount()).toBe(1);
 
     await activePlugin?.configureServer?.(fixture.server as never);
     expect(fixture.getMiddlewareCount()).toBe(1);

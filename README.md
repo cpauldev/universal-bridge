@@ -12,18 +12,23 @@
 
 # UniversaKit
 
-UniversaKit is a framework-agnostic bridge for local developer tools. It mounts a same-origin control plane (`/__universa/*`) on your app's dev server so browser overlays, CLIs, and helper scripts can all use one protocol for:
+UniversaKit is a framework-agnostic bridge for local developer tools.
 
-- bridge health/state
-- runtime start/restart/stop
-- websocket events
-- proxying tool APIs through the host origin
+Every framework integrates with its dev server differently. Vite has a plugin system. Next.js only exposes a `rewrites` config. Bun has its own server API. Astro, Nuxt, and Angular CLI each have their own setup as well. A dev tool that needs to reach a local companion process through that layer usually needs a separate integration built for each one.
+
+UniversaKit fixes this with one fixed protocol: a small set of HTTP routes plus a websocket event channel. Framework-specific adapters translate it for whatever setup the developer is running.
+
+It mounts a same-origin control plane at `/__universa/*` on the host, covering bridge health/state, runtime start/restart/stop, websocket events, and API proxying.
+
+## Who is this for?
+
+Use UniversaKit directly if you're building a developer tool package (overlay, sidebar, panel, or CLI companion) that needs to work across frameworks.
+
+If you're using a tool that already ships UniversaKit integration, use that tool's setup docs instead.
 
 ## Table of Contents
 
-- [Who is this for?](#who-is-this-for)
 - [Installation](#installation)
-- [Problem this solves](#problem-this-solves)
 - [What it provides](#what-it-provides)
 - [Use cases](#use-cases)
 - [Quick start (Vite)](#quick-start-vite)
@@ -37,12 +42,6 @@ UniversaKit is a framework-agnostic bridge for local developer tools. It mounts 
 - [Design caveats](#design-caveats)
 - [Compatibility](#compatibility)
 - [Additional docs](#additional-docs)
-
-## Who is this for?
-
-Use UniversaKit directly if you are building a developer tool package (overlay/sidebar/panel/CLI companion) that should work across frameworks.
-
-If you are an end user of a tool that already ships UniversaKit integration, use that tool's setup docs instead.
 
 ## Installation
 
@@ -61,10 +60,6 @@ yarn add universa-kit
 ```bash
 bun add universa-kit
 ```
-
-## Problem this solves
-
-Framework dev servers expose different middleware/plugin APIs, so local tooling integrations are often framework-specific. UniversaKit standardizes this with one same-origin bridge contract mounted onto the host dev server.
 
 ## What it provides
 

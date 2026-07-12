@@ -1,19 +1,19 @@
 import {
   type MiddlewareAdapterServer,
-  type UniversaAdapterOptions,
+  type UniversalAdapterOptions,
   createBridgeLifecycle,
   resolveAdapterOptions,
 } from "../shared/adapter-utils.js";
 
-export type AstroUniversaOptions = UniversaAdapterOptions;
-export type UniversaAstroIntegration = {
+export type AstroUniversalOptions = UniversalAdapterOptions;
+export type UniversalAstroIntegration = {
   name: string;
   hooks: Record<string, (options: unknown) => void | Promise<void>>;
 };
 
-export function createUniversaAstroIntegration(
-  options: AstroUniversaOptions = {},
-): UniversaAstroIntegration {
+export function createUniversalAstroIntegration(
+  options: AstroUniversalOptions = {},
+): UniversalAstroIntegration {
   const resolvedOptions = resolveAdapterOptions(options);
   const lifecycle = createBridgeLifecycle(resolvedOptions);
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 
 import {
   type FastifyLikeInstance,
-  attachUniversaToFastify,
+  attachUniversalToFastify,
 } from "../adapters/server/fastify.js";
 
 type HookHandler = (...args: unknown[]) => void;
@@ -29,7 +29,7 @@ function createFastifyFixture(): {
 describe("fastify adapter", () => {
   it("registers request/close hooks and forwards non-bridge routes", async () => {
     const fixture = createFastifyFixture();
-    const handle = await attachUniversaToFastify(fixture.fastify, {
+    const handle = await attachUniversalToFastify(fixture.fastify, {
       autoStart: false,
     });
 
@@ -42,7 +42,7 @@ describe("fastify adapter", () => {
     onRequest?.(
       {
         raw: {
-          url: "/not-universa-kit",
+          url: "/not-universal-bridge",
           method: "GET",
         },
       },

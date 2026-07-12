@@ -1,11 +1,11 @@
-import type { UniversaAdapterOptions } from "./adapters/shared/adapter-utils.js";
+import type { UniversalAdapterOptions } from "./adapters/shared/adapter-utils.js";
 
-export type UniversaPresetIdentity = {
+export type UniversalPresetIdentity = {
   packageName: string;
   variant?: string;
 };
 
-export type UniversaCompositionMode = "registry" | "local";
+export type UniversalCompositionMode = "registry" | "local";
 
 type UnsafeOverrides = Partial<{
   adapterName: string;
@@ -13,46 +13,46 @@ type UnsafeOverrides = Partial<{
 }>;
 
 type BasePresetAdapterOptions = Omit<
-  UniversaAdapterOptions,
+  UniversalAdapterOptions,
   "bridgePathPrefix" | "rewriteSource" | "adapterName" | "nextBridgeGlobalKey"
 >;
 
-export type UniversaPresetOptions = BasePresetAdapterOptions & {
-  identity: UniversaPresetIdentity;
-  composition?: UniversaCompositionMode;
+export type UniversalPresetOptions = BasePresetAdapterOptions & {
+  identity: UniversalPresetIdentity;
+  composition?: UniversalCompositionMode;
   instanceId?: string;
   unsafeOverrides?: UnsafeOverrides;
 };
 
-export interface UniversaNamespaceMetadata {
+export interface UniversalNamespaceMetadata {
   canonicalIdentity: string;
   baseId: string;
   namespaceId: string;
   keyPrefix: string;
 }
 
-export interface UniversaPresetRegistration {
+export interface UniversalPresetRegistration {
   id: string;
   order: number;
   fingerprint: string;
-  identity: UniversaPresetIdentity;
-  composition: UniversaCompositionMode;
-  namespace: UniversaNamespaceMetadata;
-  effectiveOptions: UniversaAdapterOptions;
+  identity: UniversalPresetIdentity;
+  composition: UniversalCompositionMode;
+  namespace: UniversalNamespaceMetadata;
+  effectiveOptions: UniversalAdapterOptions;
 }
 
 type PresetRegistryStore = {
-  entries: UniversaPresetRegistration[];
+  entries: UniversalPresetRegistration[];
   nextOrder: number;
   baseIdCounts: Map<string, number>;
-  byFingerprint: Map<string, UniversaPresetRegistration>;
+  byFingerprint: Map<string, UniversalPresetRegistration>;
   usedNamespaces: Set<string>;
 };
 
-const PRESET_REGISTRY_SYMBOL = Symbol.for("universa.preset.registry");
-const NEXT_BRIDGE_GLOBAL_KEY_PREFIX = "__UNIVERSA_NEXT_BRIDGE__:";
-const BRIDGE_PATH_PREFIX = "/__universa";
-const ADAPTER_PREFIX = "universa";
+const PRESET_REGISTRY_SYMBOL = Symbol.for("universal.preset.registry");
+const NEXT_BRIDGE_GLOBAL_KEY_PREFIX = "__UNIVERSAL_NEXT_BRIDGE__:";
+const BRIDGE_PATH_PREFIX = "/__universal";
+const ADAPTER_PREFIX = "universal";
 
 function getRegistryStore(): PresetRegistryStore {
   const runtimeGlobal = globalThis as typeof globalThis & {
@@ -64,7 +64,7 @@ function getRegistryStore(): PresetRegistryStore {
       entries: [],
       nextOrder: 0,
       baseIdCounts: new Map<string, number>(),
-      byFingerprint: new Map<string, UniversaPresetRegistration>(),
+      byFingerprint: new Map<string, UniversalPresetRegistration>(),
       usedNamespaces: new Set<string>(),
     };
   }
@@ -83,7 +83,7 @@ function sanitizeSegment(value: string, fallback: string): string {
   return normalized || fallback;
 }
 
-function canonicalizeIdentity(identity: UniversaPresetIdentity): {
+function canonicalizeIdentity(identity: UniversalPresetIdentity): {
   packageName: string;
   variant?: string;
   canonicalIdentity: string;
@@ -91,7 +91,7 @@ function canonicalizeIdentity(identity: UniversaPresetIdentity): {
   const packageName = identity.packageName?.trim();
   if (!packageName) {
     throw new Error(
-      "createUniversaPreset requires identity.packageName (non-empty).",
+      "createUniversalPreset requires identity.packageName (non-empty).",
     );
   }
 
@@ -149,7 +149,7 @@ function reserveNamespace(
   }
 }
 
-function createFingerprint(options: UniversaPresetOptions): string {
+function createFingerprint(options: UniversalPresetOptions): string {
   return stableStringify({
     identity: options.identity,
     composition: options.composition,
@@ -160,10 +160,10 @@ function createFingerprint(options: UniversaPresetOptions): string {
 }
 
 function buildEffectiveOptions(
-  options: UniversaPresetOptions,
+  options: UniversalPresetOptions,
   namespaceId: string,
   canonicalIdentity: string,
-): UniversaAdapterOptions {
+): UniversalAdapterOptions {
   const {
     identity: _identity,
     composition: _composition,
@@ -191,9 +191,9 @@ function buildEffectiveOptions(
   };
 }
 
-export function registerUniversaPreset(
-  options: UniversaPresetOptions,
-): UniversaPresetRegistration {
+export function registerUniversalPreset(
+  options: UniversalPresetOptions,
+): UniversalPresetRegistration {
   const store = getRegistryStore();
   const fingerprint = createFingerprint(options);
   const existing = store.byFingerprint.get(fingerprint);
@@ -216,13 +216,13 @@ export function registerUniversaPreset(
       : `${baseId}-${count}`;
 
   const namespaceId = reserveNamespace(store, namespaceCandidate, baseId);
-  const registrationId = `universa-preset-${store.nextOrder + 1}`;
+  const registrationId = `universal-preset-${store.nextOrder + 1}`;
   const composition = options.composition ?? "registry";
-  const namespace: UniversaNamespaceMetadata = {
+  const namespace: UniversalNamespaceMetadata = {
     canonicalIdentity: identity.canonicalIdentity,
     baseId,
     namespaceId,
-    keyPrefix: `universa:client:${namespaceId}`,
+    keyPrefix: `universal:client:${namespaceId}`,
   };
 
   const effectiveOptions = buildEffectiveOptions(
@@ -231,7 +231,7 @@ export function registerUniversaPreset(
     identity.canonicalIdentity,
   );
 
-  const registration: UniversaPresetRegistration = {
+  const registration: UniversalPresetRegistration = {
     id: registrationId,
     order: store.nextOrder + 1,
     fingerprint,
@@ -250,14 +250,14 @@ export function registerUniversaPreset(
   return registration;
 }
 
-export function getUniversaRegisteredPresets(): UniversaPresetRegistration[] {
+export function getUniversalRegisteredPresets(): UniversalPresetRegistration[] {
   return [...getRegistryStore().entries];
 }
 
 function dedupeByNamespace(
-  entries: UniversaPresetRegistration[],
-): UniversaPresetRegistration[] {
-  const byNamespace = new Map<string, UniversaPresetRegistration>();
+  entries: UniversalPresetRegistration[],
+): UniversalPresetRegistration[] {
+  const byNamespace = new Map<string, UniversalPresetRegistration>();
   for (const entry of entries) {
     const namespaceId = entry.namespace.namespaceId;
     const existing = byNamespace.get(namespaceId);
@@ -274,13 +274,13 @@ function dedupeByNamespace(
 }
 
 export function resolveFrameworkComposition(
-  current: UniversaPresetRegistration,
-): UniversaPresetRegistration[] {
+  current: UniversalPresetRegistration,
+): UniversalPresetRegistration[] {
   if (current.composition === "local") {
     return [current];
   }
 
-  const registryEntries = getUniversaRegisteredPresets().filter(
+  const registryEntries = getUniversalRegisteredPresets().filter(
     (entry) => entry.composition === "registry",
   );
   return dedupeByNamespace(registryEntries);

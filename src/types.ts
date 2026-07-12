@@ -1,21 +1,21 @@
-export type UniversaRuntimePhase =
+export type UniversalRuntimePhase =
   | "stopped"
   | "starting"
   | "running"
   | "stopping"
   | "error";
 
-export type UniversaProtocolVersion = "1";
+export type UniversalProtocolVersion = "1";
 
-export interface UniversaRuntimeStatus {
-  phase: UniversaRuntimePhase;
+export interface UniversalRuntimeStatus {
+  phase: UniversalRuntimePhase;
   url: string | null;
   pid: number | null;
   startedAt: number | null;
   lastError: string | null;
 }
 
-export type UniversaErrorCode =
+export type UniversalErrorCode =
   | "invalid_request"
   | "route_not_found"
   | "runtime_start_failed"
@@ -24,20 +24,20 @@ export type UniversaErrorCode =
   | "bridge_proxy_failed"
   | "internal_error";
 
-export interface UniversaErrorPayload {
-  code: UniversaErrorCode;
+export interface UniversalErrorPayload {
+  code: UniversalErrorCode;
   message: string;
   retryable: boolean;
   details?: Record<string, unknown>;
 }
 
-export interface UniversaErrorResponse {
+export interface UniversalErrorResponse {
   success: false;
   message: string;
-  error: UniversaErrorPayload;
+  error: UniversalErrorPayload;
 }
 
-export interface UniversaBridgeCapabilities {
+export interface UniversalBridgeCapabilities {
   commandHost: "host" | "helper" | "hybrid";
   hasRuntimeControl: boolean;
   canStartRuntime: boolean;
@@ -45,29 +45,29 @@ export interface UniversaBridgeCapabilities {
   canStopRuntime: boolean;
   fallbackCommand: string;
   wsSubprotocol: string;
-  supportedProtocolVersions: UniversaProtocolVersion[];
+  supportedProtocolVersions: UniversalProtocolVersion[];
 }
 
-export interface UniversaBridgeInstance {
+export interface UniversalBridgeInstance {
   id: string;
   label?: string;
 }
 
-export interface UniversaBridgeState {
-  protocolVersion: UniversaProtocolVersion;
+export interface UniversalBridgeState {
+  protocolVersion: UniversalProtocolVersion;
   transportState:
     | "disconnected"
     | "bridge_detecting"
     | "runtime_starting"
     | "connected"
     | "degraded";
-  runtime: UniversaRuntimeStatus;
-  capabilities: UniversaBridgeCapabilities;
-  instance?: UniversaBridgeInstance;
+  runtime: UniversalRuntimeStatus;
+  capabilities: UniversalBridgeCapabilities;
+  instance?: UniversalBridgeInstance;
   error?: string;
 }
 
-export interface UniversaCommandRequest {
+export interface UniversalCommandRequest {
   command:
     | "sync"
     | "login"
@@ -80,25 +80,25 @@ export interface UniversaCommandRequest {
   payload?: Record<string, unknown>;
 }
 
-export interface UniversaCommandResult {
+export interface UniversalCommandResult {
   success: boolean;
   message?: string;
   operationId?: string;
   data?: Record<string, unknown>;
 }
 
-interface UniversaBridgeEventBase {
-  protocolVersion: UniversaProtocolVersion;
+interface UniversalBridgeEventBase {
+  protocolVersion: UniversalProtocolVersion;
   eventId: number;
   timestamp: number;
 }
 
-export type UniversaBridgeEvent =
-  | (UniversaBridgeEventBase & {
+export type UniversalBridgeEvent =
+  | (UniversalBridgeEventBase & {
       type: "runtime-status";
-      status: UniversaRuntimeStatus;
+      status: UniversalRuntimeStatus;
     })
-  | (UniversaBridgeEventBase & {
+  | (UniversalBridgeEventBase & {
       type: "runtime-error";
       error: string;
     });

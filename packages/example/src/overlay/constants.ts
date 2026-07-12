@@ -1,8 +1,8 @@
 import {
-  type UniversaClientRuntimeContext,
+  type UniversalClientRuntimeContext,
   createClientRuntimeContext,
   resolveClientRuntimeContext,
-} from "universa-kit/client-runtime";
+} from "universal-bridge/client-runtime";
 
 import type {
   OverlayPosition,
@@ -12,13 +12,13 @@ import type {
 
 export const OVERLAY_MODULE_SPECIFIER = "example/overlay";
 
-function createFallbackRuntimeContext(): UniversaClientRuntimeContext {
+function createFallbackRuntimeContext(): UniversalClientRuntimeContext {
   return createClientRuntimeContext({
     namespaceId: "example",
   });
 }
 
-export const OVERLAY_RUNTIME_CONTEXT: UniversaClientRuntimeContext =
+export const OVERLAY_RUNTIME_CONTEXT: UniversalClientRuntimeContext =
   resolveClientRuntimeContext(OVERLAY_MODULE_SPECIFIER) ??
   createFallbackRuntimeContext();
 

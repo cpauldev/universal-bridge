@@ -1,7 +1,7 @@
-import type { BridgeLifecycle, UniversaAdapterOptions } from "../shared/adapter-utils.js";
+import type { BridgeLifecycle, UniversalAdapterOptions } from "../shared/adapter-utils.js";
 import {
   createBuildToolBridgeLifecycle,
-  withUniversaBuildTool,
+  withUniversalBuildTool,
   type BuildToolConfig,
   type BuildToolDevServerLike,
 } from "./create-build-adapter.js";
@@ -16,22 +16,22 @@ export type WebpackDevServerLike = BuildToolDevServerLike;
 export type WebpackDevServerConfig<TMiddlewares extends unknown[] = unknown[]> =
   BuildToolConfig<TMiddlewares>;
 
-export type WebpackUniversaOptions = UniversaAdapterOptions;
+export type WebpackUniversalOptions = UniversalAdapterOptions;
 
 export function createWebpackBridgeLifecycle(
-  options: WebpackUniversaOptions = {},
+  options: WebpackUniversalOptions = {},
 ): BridgeLifecycle {
   return createBuildToolBridgeLifecycle(options);
 }
 
-export function withUniversaWebpackDevServer<
+export function withUniversalWebpackDevServer<
   TMiddlewares extends unknown[],
   TConfig extends WebpackDevServerConfig<TMiddlewares>,
 >(
   config: TConfig,
-  options: WebpackUniversaOptions = {},
+  options: WebpackUniversalOptions = {},
 ): TConfig & WebpackDevServerConfig<TMiddlewares> {
-  return withUniversaBuildTool<TMiddlewares, WebpackDevServerLike, TConfig>(
+  return withUniversalBuildTool<TMiddlewares, WebpackDevServerLike, TConfig>(
     config,
     options,
   );

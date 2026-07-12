@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "http";
 
-import type { UniversaErrorPayload } from "../types.js";
+import type { UniversalErrorPayload } from "../types.js";
 import { JSON_HEADERS } from "./constants.js";
 
 export function readRequestBody(req: IncomingMessage): Promise<Buffer> {
@@ -25,7 +25,7 @@ export function writeJson(
 export function writeError(
   res: ServerResponse,
   statusCode: number,
-  error: UniversaErrorPayload,
+  error: UniversalErrorPayload,
 ): void {
   writeJson(res, statusCode, {
     success: false,

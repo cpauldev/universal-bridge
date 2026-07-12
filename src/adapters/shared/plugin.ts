@@ -1,13 +1,13 @@
 import {
-  type UniversaAdapterOptions,
+  type UniversalAdapterOptions,
   type ViteAdapterServer,
   createBridgeLifecycle,
   resolveAdapterOptions,
 } from "./adapter-utils.js";
 
-export type UniversaVitePluginOptions = UniversaAdapterOptions;
-export function createUniversaVitePlugin(
-  options: UniversaVitePluginOptions = {},
+export type UniversalVitePluginOptions = UniversalAdapterOptions;
+export function createUniversalVitePlugin(
+  options: UniversalVitePluginOptions = {},
 ) {
   const resolvedOptions = resolveAdapterOptions(options);
   const lifecycle = createBridgeLifecycle(resolvedOptions);

@@ -1,25 +1,25 @@
 import type { RuntimeHelperOptions } from "../runtime/runtime-helper.js";
-import type { UniversaBridgeInstance } from "../types.js";
+import type { UniversalBridgeInstance } from "../types.js";
 import {
   DEFAULT_FALLBACK_COMMAND,
   WS_HEARTBEAT_INTERVAL_MS_DEFAULT,
 } from "./constants.js";
 import { normalizeBridgePathPrefix } from "./prefix.js";
 
-export interface UniversaBridgeOptions extends RuntimeHelperOptions {
+export interface UniversalBridgeOptions extends RuntimeHelperOptions {
   autoStart?: boolean;
   bridgePathPrefix?: string;
   fallbackCommand?: string;
   eventHeartbeatIntervalMs?: number;
   proxyRuntimeWebSocket?: boolean;
-  instance?: UniversaBridgeInstance;
+  instance?: UniversalBridgeInstance;
   /** Additional URL path prefixes to proxy directly to the runtime (e.g. ["/dashboard"]). */
   additionalProxyPaths?: string[];
 }
 
 export type ResolvedBridgeOptions = Required<
   Pick<
-    UniversaBridgeOptions,
+    UniversalBridgeOptions,
     | "autoStart"
     | "bridgePathPrefix"
     | "fallbackCommand"
@@ -28,7 +28,7 @@ export type ResolvedBridgeOptions = Required<
   >
 > &
   Omit<
-    UniversaBridgeOptions,
+    UniversalBridgeOptions,
     | "autoStart"
     | "bridgePathPrefix"
     | "fallbackCommand"
@@ -37,7 +37,7 @@ export type ResolvedBridgeOptions = Required<
   >;
 
 export function resolveBridgeOptions(
-  options: UniversaBridgeOptions,
+  options: UniversalBridgeOptions,
 ): ResolvedBridgeOptions {
   return {
     ...options,

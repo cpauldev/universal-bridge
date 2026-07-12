@@ -4,7 +4,7 @@ import {
 } from "react";
 import { type Root as ReactRoot, createRoot } from "react-dom/client";
 import { Toaster } from "sileo";
-import type { UniversaBridgeEvent } from "universa-kit";
+import type { UniversalBridgeEvent } from "universal-bridge";
 
 import {
   OverlayPanel,
@@ -50,11 +50,11 @@ import { setOverlayPortalContainer } from "./ui/utils.js";
 type TransportState = OverlayState["transportState"];
 const FAILURE_THRESHOLD = 2;
 type RuntimeStatusEvent = Extract<
-  UniversaBridgeEvent,
+  UniversalBridgeEvent,
   { type: "runtime-status" }
 >;
 type RuntimeErrorEvent = Extract<
-  UniversaBridgeEvent,
+  UniversalBridgeEvent,
   { type: "runtime-error" }
 >;
 
@@ -80,7 +80,7 @@ function isRuntimeErrorEvent(message: unknown): message is RuntimeErrorEvent {
 
 function resolveBridgeTransportState(
   current: TransportState,
-  bridgeState: import("universa-kit").UniversaBridgeState,
+  bridgeState: import("universal-bridge").UniversalBridgeState,
 ): TransportState {
   if (
     current === "runtime_starting" &&

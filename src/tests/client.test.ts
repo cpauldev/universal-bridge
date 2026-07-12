@@ -5,10 +5,13 @@ import { WebSocket } from "ws";
 
 import {
   type StandaloneBridgeServer,
-  startStandaloneUniversaBridgeServer,
+  startStandaloneUniversalBridgeServer,
 } from "../bridge/standalone.js";
-import { UniversaClientError, createUniversaClient } from "../client/client.js";
-import type { UniversaBridgeEvent } from "../types.js";
+import {
+  UniversalClientError,
+  createUniversalClient,
+} from "../client/client.js";
+import type { UniversalBridgeEvent } from "../types.js";
 
 const fixtureRuntimeScript = resolve(
   dirname(fileURLToPath(import.meta.url)),
@@ -27,10 +30,10 @@ afterEach(async () => {
 });
 
 async function waitForEvent(
-  events: UniversaBridgeEvent[],
-  predicate: (event: UniversaBridgeEvent) => boolean,
+  events: UniversalBridgeEvent[],
+  predicate: (event: UniversalBridgeEvent) => boolean,
   timeoutMs = 4000,
-): Promise<UniversaBridgeEvent> {
+): Promise<UniversalBridgeEvent> {
   const startedAt = Date.now();
   while (Date.now() - startedAt < timeoutMs) {
     const match = events.find(predicate);
@@ -43,15 +46,15 @@ async function waitForEvent(
   throw new Error("Timed out waiting for bridge event");
 }
 
-describe("universa-kit client", () => {
+describe("universal-bridge client", () => {
   it("resolves namespaced bridge routes from namespaceId", async () => {
-    const server = await startStandaloneUniversaBridgeServer({
+    const server = await startStandaloneUniversalBridgeServer({
       autoStart: false,
-      bridgePathPrefix: "/__universa/tests-client",
+      bridgePathPrefix: "/__universal/tests-client",
     });
     standaloneServers.add(server);
 
-    const client = createUniversaClient({
+    const client = createUniversalClient({
       baseUrl: server.baseUrl,
       namespaceId: "tests-client",
     });
@@ -62,12 +65,12 @@ describe("universa-kit client", () => {
   });
 
   it("reads health and bridge state", async () => {
-    const server = await startStandaloneUniversaBridgeServer({
+    const server = await startStandaloneUniversalBridgeServer({
       autoStart: false,
     });
     standaloneServers.add(server);
 
-    const client = createUniversaClient({
+    const client = createUniversalClient({
       baseUrl: server.baseUrl,
     });
     const health = await client.getHealth();
@@ -81,7 +84,7 @@ describe("universa-kit client", () => {
   });
 
   it("controls runtime lifecycle through the typed client", async () => {
-    const server = await startStandaloneUniversaBridgeServer({
+    const server = await startStandaloneUniversalBridgeServer({
       autoStart: false,
       command: process.execPath,
       args: [fixtureRuntimeScript],
@@ -89,7 +92,7 @@ describe("universa-kit client", () => {
     });
     standaloneServers.add(server);
 
-    const client = createUniversaClient({
+    const client = createUniversalClient({
       baseUrl: server.baseUrl,
     });
 
@@ -107,12 +110,12 @@ describe("universa-kit client", () => {
   });
 
   it("throws a typed client error for failed runtime start", async () => {
-    const server = await startStandaloneUniversaBridgeServer({
+    const server = await startStandaloneUniversalBridgeServer({
       autoStart: false,
     });
     standaloneServers.add(server);
 
-    const client = createUniversaClient({
+    const client = createUniversalClient({
       baseUrl: server.baseUrl,
     });
 
@@ -123,14 +126,14 @@ describe("universa-kit client", () => {
       error = caughtError;
     }
 
-    expect(error).toBeInstanceOf(UniversaClientError);
-    const typedError = error as UniversaClientError;
+    expect(error).toBeInstanceOf(UniversalClientError);
+    const typedError = error as UniversalClientError;
     expect(typedError.statusCode).toBe(503);
     expect(typedError.response?.error.code).toBe("runtime_start_failed");
   });
 
   it("subscribes to bridge events", async () => {
-    const server = await startStandaloneUniversaBridgeServer({
+    const server = await startStandaloneUniversalBridgeServer({
       autoStart: false,
       command: process.execPath,
       args: [fixtureRuntimeScript],
@@ -138,8 +141,8 @@ describe("universa-kit client", () => {
     });
     standaloneServers.add(server);
 
-    const events: UniversaBridgeEvent[] = [];
-    const client = createUniversaClient({
+    const events: UniversalBridgeEvent[] = [];
+    const client = createUniversalClient({
       baseUrl: server.baseUrl,
       webSocketFactory: (url, protocols) =>
         new WebSocket(url, protocols) as unknown as {

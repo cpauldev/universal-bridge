@@ -1,8 +1,8 @@
 export {
-  UNIVERSA_BRIDGE_PATH_PREFIX,
-  UNIVERSA_BRIDGE_REWRITE_SOURCE,
-  UNIVERSA_DEV_ADAPTER_NAME,
-  UNIVERSA_NEXT_BRIDGE_GLOBAL_KEY,
+  UNIVERSAL_BRIDGE_PATH_PREFIX,
+  UNIVERSAL_BRIDGE_REWRITE_SOURCE,
+  UNIVERSAL_DEV_ADAPTER_NAME,
+  UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY,
   appendPlugin,
   attachBridgeToServer,
   attachBridgeToViteServer,
@@ -14,17 +14,17 @@ export {
   normalizeRewrites,
   resolveAdapterOptions,
   type BridgeLifecycle,
-  type UniversaAdapterOptions,
-  type UniversaNormalizedRewrites,
-  type UniversaRewriteRule,
-  type UniversaRewriteSpec,
+  type UniversalAdapterOptions,
+  type UniversalNormalizedRewrites,
+  type UniversalRewriteRule,
+  type UniversalRewriteSpec,
   type MiddlewareAdapterServer,
   type ViteAdapterServer,
   type ViteBridgeLifecycle,
 } from "./adapters/shared/adapter-utils.js";
 export {
   createSetupMiddlewaresBridgeLifecycle,
-  withUniversaSetupMiddlewares,
+  withUniversalSetupMiddlewares,
 } from "./adapters/build/middleware-dev-server.js";
 export type {
   SetupMiddlewaresApp,

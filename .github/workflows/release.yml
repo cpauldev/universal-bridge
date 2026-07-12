@@ -142,7 +142,7 @@ jobs:
         run: |
           echo "npm publish authentication failed."
           echo "Configure one of these:"
-          echo "1) npm trusted publisher for cpauldev/universa-kit + release.yml (recommended)"
+          echo "1) npm trusted publisher for cpauldev/universal-bridge + release.yml (recommended)"
           echo "2) repository secret NPM_TOKEN (granular publish token)"
 
       - name: Create GitHub Release

@@ -1,6 +1,6 @@
 {
-  "name": "universa-kit",
-  "version": "0.2.0",
+  "name": "universal-bridge",
+  "version": "0.3.0",
   "description": "Universal bridge for in-browser development tools with cross-framework adapters, same-origin APIs, and runtime control.",
   "type": "module",
   "main": "./dist/index.js",
@@ -81,6 +81,7 @@
   },
   "files": [
     "dist",
+    "banner.webp",
     "README.md",
     "PROTOCOL.md",
     "ARCHITECTURE.md",
@@ -131,7 +132,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cpauldev/universa-kit.git"
+    "url": "git+https://github.com/cpauldev/universal-bridge.git"
   },
   "author": "Christian Paul",
   "license": "MIT",

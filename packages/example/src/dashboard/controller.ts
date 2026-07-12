@@ -1,4 +1,4 @@
-import type { UniversaBridgeEvent } from "universa-kit";
+import type { UniversalBridgeEvent } from "universal-bridge";
 
 import {
   type ExampleApi,
@@ -31,11 +31,11 @@ const WS_RECONNECT_DELAY_MS = 1500;
 let overlayBootstrapPromise: Promise<void> | null = null;
 
 type RuntimeStatusEvent = Extract<
-  UniversaBridgeEvent,
+  UniversalBridgeEvent,
   { type: "runtime-status" }
 >;
 type RuntimeErrorEvent = Extract<
-  UniversaBridgeEvent,
+  UniversalBridgeEvent,
   { type: "runtime-error" }
 >;
 

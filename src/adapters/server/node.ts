@@ -1,27 +1,27 @@
-import type { UniversaBridge } from "../../bridge/bridge.js";
+import type { UniversalBridge } from "../../bridge/bridge.js";
 import {
   type BridgeLifecycle,
   type MiddlewareAdapterServer,
-  type UniversaAdapterOptions,
+  type UniversalAdapterOptions,
   createBridgeLifecycle,
 } from "../shared/adapter-utils.js";
 
-export type NodeUniversaOptions = UniversaAdapterOptions;
+export type NodeUniversalOptions = UniversalAdapterOptions;
 
 export interface NodeBridgeHandle {
-  bridge: UniversaBridge;
+  bridge: UniversalBridge;
   close: () => Promise<void>;
 }
 
 export function createNodeBridgeLifecycle(
-  options: NodeUniversaOptions = {},
+  options: NodeUniversalOptions = {},
 ): BridgeLifecycle {
   return createBridgeLifecycle(options);
 }
 
-export async function attachUniversaToNodeServer(
+export async function attachUniversalToNodeServer(
   server: MiddlewareAdapterServer,
-  options: NodeUniversaOptions = {},
+  options: NodeUniversalOptions = {},
 ): Promise<NodeBridgeHandle> {
   const lifecycle = createNodeBridgeLifecycle(options);
   const bridge = await lifecycle.setup(server);

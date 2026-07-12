@@ -1,17 +1,17 @@
 import {
   BRIDGE_PREFIX_DEFAULT,
-  UNIVERSA_WS_SUBPROTOCOL,
+  UNIVERSAL_WS_SUBPROTOCOL,
 } from "../bridge/constants.js";
 import { normalizeBridgePathPrefix } from "../bridge/prefix.js";
 import type {
-  UniversaBridgeEvent,
-  UniversaBridgeInstance,
-  UniversaBridgeState,
-  UniversaErrorResponse,
-  UniversaRuntimeStatus,
+  UniversalBridgeEvent,
+  UniversalBridgeInstance,
+  UniversalBridgeState,
+  UniversalErrorResponse,
+  UniversalRuntimeStatus,
 } from "../types.js";
 
-export interface UniversaClientOptions {
+export interface UniversalClientOptions {
   baseUrl?: string;
   bridgePathPrefix?: string;
   namespaceId?: string;
@@ -19,20 +19,20 @@ export interface UniversaClientOptions {
   webSocketFactory?: (
     url: string,
     protocols: string[],
-  ) => UniversaWebSocketLike;
+  ) => UniversalWebSocketLike;
 }
 
-export interface UniversaBridgeHealth extends UniversaBridgeState {
+export interface UniversalBridgeHealth extends UniversalBridgeState {
   ok: true;
   bridge: true;
-  instance?: UniversaBridgeInstance;
+  instance?: UniversalBridgeInstance;
 }
 
-export interface UniversaEventsSubscriptionOptions {
+export interface UniversalEventsSubscriptionOptions {
   onError?: (error: unknown) => void;
 }
 
-export interface UniversaWebSocketLike {
+export interface UniversalWebSocketLike {
   close: () => void;
   addEventListener?: (
     event: string,
@@ -50,30 +50,30 @@ export interface UniversaWebSocketLike {
   ) => void;
 }
 
-export class UniversaClientError extends Error {
+export class UniversalClientError extends Error {
   statusCode: number;
-  response: UniversaErrorResponse | null;
+  response: UniversalErrorResponse | null;
 
-  constructor(statusCode: number, response: UniversaErrorResponse | null) {
+  constructor(statusCode: number, response: UniversalErrorResponse | null) {
     super(
       response?.error.message ?? `Request failed with status ${statusCode}`,
     );
-    this.name = "UniversaClientError";
+    this.name = "UniversalClientError";
     this.statusCode = statusCode;
     this.response = response;
   }
 }
 
-export interface UniversaClient {
-  getHealth: () => Promise<UniversaBridgeHealth>;
-  getState: () => Promise<UniversaBridgeState>;
-  getRuntimeStatus: () => Promise<UniversaRuntimeStatus>;
-  startRuntime: () => Promise<UniversaRuntimeStatus>;
-  restartRuntime: () => Promise<UniversaRuntimeStatus>;
-  stopRuntime: () => Promise<UniversaRuntimeStatus>;
+export interface UniversalClient {
+  getHealth: () => Promise<UniversalBridgeHealth>;
+  getState: () => Promise<UniversalBridgeState>;
+  getRuntimeStatus: () => Promise<UniversalRuntimeStatus>;
+  startRuntime: () => Promise<UniversalRuntimeStatus>;
+  restartRuntime: () => Promise<UniversalRuntimeStatus>;
+  stopRuntime: () => Promise<UniversalRuntimeStatus>;
   subscribeEvents: (
-    listener: (event: UniversaBridgeEvent) => void,
-    options?: UniversaEventsSubscriptionOptions,
+    listener: (event: UniversalBridgeEvent) => void,
+    options?: UniversalEventsSubscriptionOptions,
   ) => () => void;
 }
 
@@ -114,12 +114,12 @@ function resolveWebSocketUrl(
   }
 
   throw new Error(
-    "Universa client requires `baseUrl` in non-browser environments for WebSocket subscriptions.",
+    "Universal client requires `baseUrl` in non-browser environments for WebSocket subscriptions.",
   );
 }
 
 function addSocketListener(
-  socket: UniversaWebSocketLike,
+  socket: UniversalWebSocketLike,
   event: string,
   listener: (...args: unknown[]) => void,
 ): void {
@@ -135,7 +135,7 @@ function addSocketListener(
 }
 
 function removeSocketListener(
-  socket: UniversaWebSocketLike,
+  socket: UniversalWebSocketLike,
   event: string,
   listener: (...args: unknown[]) => void,
 ): void {
@@ -180,9 +180,9 @@ function extractMessagePayload(message: unknown): string {
   return String(message);
 }
 
-export function createUniversaClient(
-  options: UniversaClientOptions = {},
-): UniversaClient {
+export function createUniversalClient(
+  options: UniversalClientOptions = {},
+): UniversalClient {
   const bridgePathPrefix = normalizeBridgePathPrefix(
     options.bridgePathPrefix ??
       (options.namespaceId?.trim()
@@ -200,13 +200,13 @@ export function createUniversaClient(
     const response = await fetchImpl(url, init);
 
     if (!response.ok) {
-      let payload: UniversaErrorResponse | null;
+      let payload: UniversalErrorResponse | null;
       try {
-        payload = (await response.json()) as UniversaErrorResponse;
+        payload = (await response.json()) as UniversalErrorResponse;
       } catch {
         payload = null;
       }
-      throw new UniversaClientError(response.status, payload);
+      throw new UniversalClientError(response.status, payload);
     }
 
     return (await response.json()) as T;
@@ -214,10 +214,10 @@ export function createUniversaClient(
 
   const requestRuntimeControl = async (
     routeSuffix: "/runtime/start" | "/runtime/restart" | "/runtime/stop",
-  ): Promise<UniversaRuntimeStatus> => {
+  ): Promise<UniversalRuntimeStatus> => {
     const payload = await requestJson<{
       success: boolean;
-      runtime: UniversaRuntimeStatus;
+      runtime: UniversalRuntimeStatus;
     }>(routeSuffix, {
       method: "POST",
       headers: {
@@ -230,30 +230,30 @@ export function createUniversaClient(
   };
 
   return {
-    getHealth: () => requestJson<UniversaBridgeHealth>("/health"),
-    getState: () => requestJson<UniversaBridgeState>("/state"),
+    getHealth: () => requestJson<UniversalBridgeHealth>("/health"),
+    getState: () => requestJson<UniversalBridgeState>("/state"),
     getRuntimeStatus: () =>
-      requestJson<UniversaRuntimeStatus>("/runtime/status"),
+      requestJson<UniversalRuntimeStatus>("/runtime/status"),
     startRuntime: () => requestRuntimeControl("/runtime/start"),
     restartRuntime: () => requestRuntimeControl("/runtime/restart"),
     stopRuntime: () => requestRuntimeControl("/runtime/stop"),
     subscribeEvents: (
-      listener: (event: UniversaBridgeEvent) => void,
-      subscriptionOptions?: UniversaEventsSubscriptionOptions,
+      listener: (event: UniversalBridgeEvent) => void,
+      subscriptionOptions?: UniversalEventsSubscriptionOptions,
     ) => {
       const eventsPath = joinPath(bridgePathPrefix, "/events");
       const webSocketUrl = resolveWebSocketUrl(options.baseUrl, eventsPath);
       const socket =
-        options.webSocketFactory?.(webSocketUrl, [UNIVERSA_WS_SUBPROTOCOL]) ??
+        options.webSocketFactory?.(webSocketUrl, [UNIVERSAL_WS_SUBPROTOCOL]) ??
         (new WebSocket(webSocketUrl, [
-          UNIVERSA_WS_SUBPROTOCOL,
-        ]) as UniversaWebSocketLike);
+          UNIVERSAL_WS_SUBPROTOCOL,
+        ]) as UniversalWebSocketLike);
 
       const onMessage = (message: unknown) => {
         try {
           const payload = JSON.parse(
             extractMessagePayload(message),
-          ) as UniversaBridgeEvent;
+          ) as UniversalBridgeEvent;
           listener(payload);
         } catch (error) {
           subscriptionOptions?.onError?.(error);

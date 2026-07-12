@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from "bun:test";
 
 import {
-  UNIVERSA_NEXT_BRIDGE_GLOBAL_KEY,
-  type UniversaRewriteSpec,
+  UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY,
+  type UniversalRewriteSpec,
 } from "../adapters/shared/adapter-utils.js";
-import { getUniversaRegisteredPresets } from "../preset-registry.js";
-import { createUniversaPreset } from "../preset.js";
+import { getUniversalRegisteredPresets } from "../preset-registry.js";
+import { createUniversalPreset } from "../preset.js";
 import { createMiddlewareAdapterServerFixture } from "./utils/adapter-server-fixtures.js";
 
 type StandaloneBridgeLike = {
@@ -20,8 +20,8 @@ const bridgeGlobal = globalThis as typeof globalThis & {
 const registryGlobal = globalThis as typeof globalThis & {
   [key: symbol]: unknown;
 };
-const registrySymbol = Symbol.for("universa.preset.registry");
-const frameworkActivationSymbol = Symbol.for("universa.framework.activation");
+const registrySymbol = Symbol.for("universal.preset.registry");
+const frameworkActivationSymbol = Symbol.for("universal.framework.activation");
 const seededKeys = new Set<string>();
 
 function seedBridge(key: string): void {
@@ -67,18 +67,18 @@ afterEach(async () => {
   await cleanupSeededBridges();
   delete registryGlobal[registrySymbol];
   delete registryGlobal[frameworkActivationSymbol];
-  delete process.env.NEXT_PUBLIC_UNIVERSA_CLIENT_CONTEXTS;
+  delete process.env.NEXT_PUBLIC_UNIVERSAL_CLIENT_CONTEXTS;
 });
 
 describe("preset registry + namespacing", () => {
   it("uses stable namespace-derived prefixes for identical factory options", async () => {
-    const bridgeKey = `${UNIVERSA_NEXT_BRIDGE_GLOBAL_KEY}:stable`;
+    const bridgeKey = `${UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY}:stable`;
     seedBridge(bridgeKey);
 
-    const first = createUniversaPreset({
+    const first = createUniversalPreset({
       identity: { packageName: "@acme/stable-tool" },
     });
-    const second = createUniversaPreset({
+    const second = createUniversalPreset({
       identity: { packageName: "@acme/stable-tool" },
     });
 
@@ -93,13 +93,13 @@ describe("preset registry + namespacing", () => {
   });
 
   it("isolates duplicate preset instances with unique namespace suffixes", async () => {
-    const bridgeKey = `${UNIVERSA_NEXT_BRIDGE_GLOBAL_KEY}:duplicates`;
+    const bridgeKey = `${UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY}:duplicates`;
     seedBridge(bridgeKey);
 
-    const first = createUniversaPreset({
+    const first = createUniversalPreset({
       identity: { packageName: "@acme/duplicate-tool" },
     });
-    const second = createUniversaPreset({
+    const second = createUniversalPreset({
       identity: { packageName: "@acme/duplicate-tool" },
       instanceId: "second",
     });
@@ -115,10 +115,10 @@ describe("preset registry + namespacing", () => {
   });
 
   it("returns composed framework plugins from the explicit registry", () => {
-    const first = createUniversaPreset({
+    const first = createUniversalPreset({
       identity: { packageName: "@acme/compose-a" },
     });
-    createUniversaPreset({
+    createUniversalPreset({
       identity: { packageName: "@acme/compose-b" },
     });
 
@@ -131,11 +131,11 @@ describe("preset registry + namespacing", () => {
   });
 
   it("respects local composition mode", () => {
-    const local = createUniversaPreset({
+    const local = createUniversalPreset({
       identity: { packageName: "@acme/local-only" },
       composition: "local",
     });
-    createUniversaPreset({
+    createUniversalPreset({
       identity: { packageName: "@acme/registry-tool" },
     });
 
@@ -144,10 +144,10 @@ describe("preset registry + namespacing", () => {
   });
 
   it("keeps one active Vite wiring per server when config is evaluated more than once", async () => {
-    const first = createUniversaPreset({
+    const first = createUniversalPreset({
       identity: { packageName: "@acme/latest-a" },
     });
-    const second = createUniversaPreset({
+    const second = createUniversalPreset({
       identity: { packageName: "@acme/latest-b" },
     });
 
@@ -172,15 +172,15 @@ describe("preset registry + namespacing", () => {
   });
 
   it("handles Nuxt event upgrades for every composed preset prefix", () => {
-    createUniversaPreset({
+    createUniversalPreset({
       identity: { packageName: "@acme/nuxt-a" },
     }).nuxt();
-    const activeModule = createUniversaPreset({
+    const activeModule = createUniversalPreset({
       identity: { packageName: "@acme/nuxt-b" },
     }).nuxt();
 
-    const bridgePrefixes = getUniversaRegisteredPresets().map(
-      (entry) => entry.effectiveOptions.bridgePathPrefix ?? "/__universa",
+    const bridgePrefixes = getUniversalRegisteredPresets().map(
+      (entry) => entry.effectiveOptions.bridgePathPrefix ?? "/__universal",
     );
     expect(bridgePrefixes.length).toBe(2);
     const secondPrefix = bridgePrefixes[1];
@@ -248,18 +248,18 @@ describe("preset registry + namespacing", () => {
   });
 
   it("keeps only the latest Next wrapper call active", async () => {
-    const firstBridgeKey = `${UNIVERSA_NEXT_BRIDGE_GLOBAL_KEY}:next-latest-a`;
-    const secondBridgeKey = `${UNIVERSA_NEXT_BRIDGE_GLOBAL_KEY}:next-latest-b`;
+    const firstBridgeKey = `${UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY}:next-latest-a`;
+    const secondBridgeKey = `${UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY}:next-latest-b`;
     seedBridge(firstBridgeKey);
     seedBridge(secondBridgeKey);
 
-    const first = createUniversaPreset({
+    const first = createUniversalPreset({
       identity: { packageName: "@acme/next-latest-a" },
       unsafeOverrides: {
         nextBridgeGlobalKey: firstBridgeKey,
       },
     });
-    const second = createUniversaPreset({
+    const second = createUniversalPreset({
       identity: { packageName: "@acme/next-latest-b" },
       unsafeOverrides: {
         nextBridgeGlobalKey: secondBridgeKey,
@@ -268,7 +268,7 @@ describe("preset registry + namespacing", () => {
 
     const wrappedConfig = second.next(
       first.next({
-        rewrites: async (): Promise<UniversaRewriteSpec> => [],
+        rewrites: async (): Promise<UniversalRewriteSpec> => [],
       }),
     );
     const rewrites = await wrappedConfig.rewrites?.();
@@ -284,11 +284,11 @@ describe("preset registry + namespacing", () => {
   });
 
   it("keeps only the latest Astro integration call active", async () => {
-    const first = createUniversaPreset({
+    const first = createUniversalPreset({
       identity: { packageName: "@acme/astro-latest-a" },
       autoStart: false,
     });
-    const second = createUniversaPreset({
+    const second = createUniversalPreset({
       identity: { packageName: "@acme/astro-latest-b" },
       autoStart: false,
     });

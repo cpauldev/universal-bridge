@@ -1,4 +1,4 @@
-import type { UniversaBridgeState, UniversaRuntimeStatus } from "../types.js";
+import type { UniversalBridgeState, UniversalRuntimeStatus } from "../types.js";
 import type { RuntimeProxyContext } from "./proxy.js";
 import type { RuntimeControlContext } from "./runtime-control.js";
 
@@ -6,12 +6,12 @@ interface BridgeContextsOptions {
   shouldAutoStartRuntime: () => boolean;
   hasRuntimeControl: () => boolean;
   fallbackCommand: string;
-  getState: () => UniversaBridgeState;
-  getRuntimeStatus: () => UniversaRuntimeStatus;
-  startRuntime: () => Promise<UniversaRuntimeStatus>;
-  restartRuntime: () => Promise<UniversaRuntimeStatus>;
-  stopRuntime: () => Promise<UniversaRuntimeStatus>;
-  ensureRuntimeStarted: () => Promise<UniversaRuntimeStatus>;
+  getState: () => UniversalBridgeState;
+  getRuntimeStatus: () => UniversalRuntimeStatus;
+  startRuntime: () => Promise<UniversalRuntimeStatus>;
+  restartRuntime: () => Promise<UniversalRuntimeStatus>;
+  stopRuntime: () => Promise<UniversalRuntimeStatus>;
+  ensureRuntimeStarted: () => Promise<UniversalRuntimeStatus>;
   getRuntimeUrl: () => string | null;
   enableAutoStartRuntime: () => void;
   disableAutoStartRuntime: () => void;

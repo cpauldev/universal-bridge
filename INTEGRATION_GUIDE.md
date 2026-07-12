@@ -1,16 +1,16 @@
-# Universa Integration Guide
+# Universal Bridge Integration Guide
 
-This guide shows how to ship a tool package that exposes one integration API and works across frameworks via UniversaKit.
+This guide shows how to ship a tool package that exposes one integration API and works across frameworks via UniversalBridge.
 
 ## 1) Build a runtime command
 
-Your tool runtime should listen on the port provided by `UNIVERSA_RUNTIME_PORT` (default env var used by UniversaKit).
+Your tool runtime should listen on the port provided by `UNIVERSAL_RUNTIME_PORT` (default env var used by UniversalBridge).
 
 ```js
 // runtime/dev-server.mjs
 import { createServer } from "node:http";
 
-const port = Number(process.env.UNIVERSA_RUNTIME_PORT ?? 3456);
+const port = Number(process.env.UNIVERSAL_RUNTIME_PORT ?? 3456);
 
 const server = createServer((req, res) => {
   if (req.url === "/api/version") {
@@ -53,10 +53,10 @@ if (command === "dev") {
 
 ```ts
 // src/index.ts
-import { createUniversaPreset } from "universa-kit/preset";
+import { createUniversalPreset } from "universal-bridge/preset";
 
 export function acmetool() {
-  return createUniversaPreset({
+  return createUniversalPreset({
     identity: { packageName: "acmetool" },
     command: "acmetool",
     args: ["dev"],
@@ -100,17 +100,17 @@ Then users run their normal app dev command.
 
 Preset integrations are namespaced:
 
-- `GET /__universa/acmetool/health`
-- `GET /__universa/acmetool/state`
-- `WS /__universa/acmetool/events`
-- `ANY /__universa/acmetool/api/*`
+- `GET /__universal/acmetool/health`
+- `GET /__universal/acmetool/state`
+- `WS /__universal/acmetool/events`
+- `ANY /__universal/acmetool/api/*`
 
 ## 5) Optional browser overlay client
 
 ```ts
-import { createUniversaClient } from "universa-kit/client";
+import { createUniversalClient } from "universal-bridge/client";
 
-const client = createUniversaClient({ namespaceId: "acmetool" });
+const client = createUniversalClient({ namespaceId: "acmetool" });
 const state = await client.getState();
 console.log(state.runtime.phase);
 
@@ -127,12 +127,12 @@ window.addEventListener("beforeunload", () => unsubscribe());
 
 - If `command` is omitted, `start`/`restart` runtime controls are unavailable by design.
 - `stop` remains idempotent.
-- `bridgePathPrefix` is normalized under `/__universa`.
+- `bridgePathPrefix` is normalized under `/__universal`.
 - Keep your public API stable (`acmetool().vite()`, `acmetool().next(...)`, etc.).
 
 ## 7) Preset composition
 
-- `createUniversaPreset` defaults to `composition: "registry"`.
+- `createUniversalPreset` defaults to `composition: "registry"`.
 - In `"registry"` mode, framework/build adapters compose all registered presets (`vite`, `next`, `nuxt`, `astro`, `webpack`, `rsbuild`, `rspack`).
 - In `"local"` mode, a preset only applies its own framework/build wiring.
 - Imperative adapters remain local to each preset instance (`bun`, `node`, `fastify`, `hono`, `angularCli`).
@@ -141,65 +141,65 @@ window.addEventListener("beforeunload", () => unsubscribe());
 
 ### Core bridge and preset APIs
 
-| API                                       | Import path           | Purpose                                        |
-| ----------------------------------------- | --------------------- | ---------------------------------------------- |
-| `createUniversaPreset`                    | `universa-kit/preset` | Unified integration surface for tool packages. |
-| `createUniversaBridge` / `UniversaBridge` | `universa-kit`        | Direct bridge instance control and attachment. |
-| `startStandaloneUniversaBridgeServer`     | `universa-kit`        | Standalone bridge server for tooling/tests.    |
+| API                                         | Import path               | Purpose                                        |
+| ------------------------------------------- | ------------------------- | ---------------------------------------------- |
+| `createUniversalPreset`                     | `universal-bridge/preset` | Unified integration surface for tool packages. |
+| `createUniversalBridge` / `UniversalBridge` | `universal-bridge`        | Direct bridge instance control and attachment. |
+| `startStandaloneUniversalBridgeServer`      | `universal-bridge`        | Standalone bridge server for tooling/tests.    |
 
 ### Client SDK and runtime-context helpers
 
-| API                                                              | Import path                   | Purpose                                                    |
-| ---------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------- |
-| `createUniversaClient` / `UniversaClientError`                   | `universa-kit/client`         | Typed health/state/runtime/event client.                   |
-| `createClientRuntimeContext`                                     | `universa-kit/client-runtime` | Create normalized namespace runtime context.               |
-| `registerClientRuntimeContext` / `registerClientRuntimeContexts` | `universa-kit/client-runtime` | Register module-to-context mappings.                       |
-| `getClientRuntimeContexts` / `resolveClientRuntimeContext`       | `universa-kit/client-runtime` | Read/resolve runtime contexts.                             |
-| `resolveClientAutoMount`                                         | `universa-kit/client-runtime` | Evaluate effective auto-mount from query/storage/defaults. |
+| API                                                              | Import path                       | Purpose                                                    |
+| ---------------------------------------------------------------- | --------------------------------- | ---------------------------------------------------------- |
+| `createUniversalClient` / `UniversalClientError`                 | `universal-bridge/client`         | Typed health/state/runtime/event client.                   |
+| `createClientRuntimeContext`                                     | `universal-bridge/client-runtime` | Create normalized namespace runtime context.               |
+| `registerClientRuntimeContext` / `registerClientRuntimeContexts` | `universal-bridge/client-runtime` | Register module-to-context mappings.                       |
+| `getClientRuntimeContexts` / `resolveClientRuntimeContext`       | `universal-bridge/client-runtime` | Read/resolve runtime contexts.                             |
+| `resolveClientAutoMount`                                         | `universal-bridge/client-runtime` | Evaluate effective auto-mount from query/storage/defaults. |
 
 ### Framework adapters
 
-| API                                   | Import path                |
-| ------------------------------------- | -------------------------- |
-| `createUniversaVitePlugin`            | `universa-kit/vite`        |
-| `withUniversaNext`                    | `universa-kit/next`        |
-| `createUniversaAstroIntegration`      | `universa-kit/astro`       |
-| `createUniversaNuxtModule`            | `universa-kit/nuxt`        |
-| `startUniversaAngularCliBridge`       | `universa-kit/angular/cli` |
-| `createUniversaAngularCliProxyConfig` | `universa-kit/angular/cli` |
-| `withUniversaAngularCliProxyConfig`   | `universa-kit/angular/cli` |
+| API                                    | Import path                    |
+| -------------------------------------- | ------------------------------ |
+| `createUniversalVitePlugin`            | `universal-bridge/vite`        |
+| `withUniversalNext`                    | `universal-bridge/next`        |
+| `createUniversalAstroIntegration`      | `universal-bridge/astro`       |
+| `createUniversalNuxtModule`            | `universal-bridge/nuxt`        |
+| `startUniversalAngularCliBridge`       | `universal-bridge/angular/cli` |
+| `createUniversalAngularCliProxyConfig` | `universal-bridge/angular/cli` |
+| `withUniversalAngularCliProxyConfig`   | `universal-bridge/angular/cli` |
 
 ### Server adapters
 
-| API                                     | Import path            |
-| --------------------------------------- | ---------------------- |
-| `attachUniversaToBunServe`              | `universa-kit/bun`     |
-| `withUniversaBunServeFetch`             | `universa-kit/bun`     |
-| `withUniversaBunServeWebSocketHandlers` | `universa-kit/bun`     |
-| `attachUniversaToNodeServer`            | `universa-kit/node`    |
-| `attachUniversaToFastify`               | `universa-kit/fastify` |
-| `attachUniversaToHonoNodeServer`        | `universa-kit/hono`    |
+| API                                      | Import path                |
+| ---------------------------------------- | -------------------------- |
+| `attachUniversalToBunServe`              | `universal-bridge/bun`     |
+| `withUniversalBunServeFetch`             | `universal-bridge/bun`     |
+| `withUniversalBunServeWebSocketHandlers` | `universal-bridge/bun`     |
+| `attachUniversalToNodeServer`            | `universal-bridge/node`    |
+| `attachUniversalToFastify`               | `universal-bridge/fastify` |
+| `attachUniversalToHonoNodeServer`        | `universal-bridge/hono`    |
 
 ### Build adapters and lifecycle helpers
 
-| API                            | Import path            |
-| ------------------------------ | ---------------------- |
-| `withUniversaWebpackDevServer` | `universa-kit/webpack` |
-| `withUniversaRsbuild`          | `universa-kit/rsbuild` |
-| `withUniversaRspack`           | `universa-kit/rspack`  |
-| `createWebpackBridgeLifecycle` | `universa-kit/webpack` |
-| `createRsbuildBridgeLifecycle` | `universa-kit/rsbuild` |
-| `createRspackBridgeLifecycle`  | `universa-kit/rspack`  |
-| `createNodeBridgeLifecycle`    | `universa-kit/node`    |
-| `createHonoBridgeLifecycle`    | `universa-kit/hono`    |
+| API                             | Import path                |
+| ------------------------------- | -------------------------- |
+| `withUniversalWebpackDevServer` | `universal-bridge/webpack` |
+| `withUniversalRsbuild`          | `universal-bridge/rsbuild` |
+| `withUniversalRspack`           | `universal-bridge/rspack`  |
+| `createWebpackBridgeLifecycle`  | `universal-bridge/webpack` |
+| `createRsbuildBridgeLifecycle`  | `universal-bridge/rsbuild` |
+| `createRspackBridgeLifecycle`   | `universal-bridge/rspack`  |
+| `createNodeBridgeLifecycle`     | `universal-bridge/node`    |
+| `createHonoBridgeLifecycle`     | `universal-bridge/hono`    |
 
 ### Runtime helper and protocol constants
 
-| API                         | Import path    |
-| --------------------------- | -------------- |
-| `RuntimeHelper`             | `universa-kit` |
-| `UNIVERSA_PROTOCOL_VERSION` | `universa-kit` |
-| `UNIVERSA_WS_SUBPROTOCOL`   | `universa-kit` |
+| API                          | Import path        |
+| ---------------------------- | ------------------ |
+| `RuntimeHelper`              | `universal-bridge` |
+| `UNIVERSAL_PROTOCOL_VERSION` | `universal-bridge` |
+| `UNIVERSAL_WS_SUBPROTOCOL`   | `universal-bridge` |
 
 For the full public export list (including types), use `src/index.ts` as the source of truth.
 
@@ -209,15 +209,15 @@ If you expose framework-specific APIs instead of a preset, keep these behaviors 
 
 ### Next.js bridge keying
 
-`withUniversaNext` creates isolated bridge keys by default. You can set `nextBridgeGlobalKey` for deterministic keying.
+`withUniversalNext` creates isolated bridge keys by default. You can set `nextBridgeGlobalKey` for deterministic keying.
 
 ```ts
-import { withUniversaNext } from "universa-kit/next";
+import { withUniversalNext } from "universal-bridge/next";
 
-export default withUniversaNext(
+export default withUniversalNext(
   {},
   {
-    nextBridgeGlobalKey: "__UNIVERSA_NEXT_BRIDGE__:workspace-a",
+    nextBridgeGlobalKey: "__UNIVERSAL_NEXT_BRIDGE__:workspace-a",
   },
 );
 ```
@@ -226,23 +226,23 @@ export default withUniversaNext(
 
 ```ts
 import {
-  attachUniversaToBunServe,
-  withUniversaBunServeFetch,
-  withUniversaBunServeWebSocketHandlers,
-} from "universa-kit/bun";
+  attachUniversalToBunServe,
+  withUniversalBunServeFetch,
+  withUniversalBunServeWebSocketHandlers,
+} from "universal-bridge/bun";
 
-const universa = await attachUniversaToBunServe({
+const universal = await attachUniversalToBunServe({
   command: "acmetool",
   args: ["dev"],
 });
 
 const server = Bun.serve({
-  fetch: withUniversaBunServeFetch((request) => new Response("ok"), universa),
-  websocket: withUniversaBunServeWebSocketHandlers(universa),
+  fetch: withUniversalBunServeFetch((request) => new Response("ok"), universal),
+  websocket: withUniversalBunServeWebSocketHandlers(universal),
 });
 
 // cleanup
-await universa.close();
+await universal.close();
 server.stop();
 ```
 
@@ -251,12 +251,12 @@ server.stop();
 ```ts
 import express from "express";
 import http from "node:http";
-import { attachUniversaToNodeServer } from "universa-kit/node";
+import { attachUniversalToNodeServer } from "universal-bridge/node";
 
 const app = express();
 const server = http.createServer(app);
 
-await attachUniversaToNodeServer(
+await attachUniversalToNodeServer(
   {
     middlewares: { use: app.use.bind(app) },
     httpServer: server,
@@ -271,10 +271,10 @@ await attachUniversaToNodeServer(
 ### webpack-dev-server integration
 
 ```ts
-import { withUniversaWebpackDevServer } from "universa-kit/webpack";
+import { withUniversalWebpackDevServer } from "universal-bridge/webpack";
 
 export default {
-  devServer: withUniversaWebpackDevServer({
+  devServer: withUniversalWebpackDevServer({
     setupMiddlewares: (middlewares) => middlewares,
   }),
 };
@@ -284,11 +284,11 @@ export default {
 
 ```ts
 import Fastify from "fastify";
-import { attachUniversaToFastify } from "universa-kit/fastify";
+import { attachUniversalToFastify } from "universal-bridge/fastify";
 
 const fastify = Fastify();
 
-await attachUniversaToFastify(fastify, {
+await attachUniversalToFastify(fastify, {
   command: "acmetool",
   args: ["dev"],
 });
@@ -296,12 +296,12 @@ await attachUniversaToFastify(fastify, {
 
 ### Hono (Node server) integration
 
-`attachUniversaToHonoNodeServer` uses the same Node-style server surface as `attachUniversaToNodeServer`.
+`attachUniversalToHonoNodeServer` uses the same Node-style server surface as `attachUniversalToNodeServer`.
 
 ```ts
-import { attachUniversaToHonoNodeServer } from "universa-kit/hono";
+import { attachUniversalToHonoNodeServer } from "universal-bridge/hono";
 
-await attachUniversaToHonoNodeServer(
+await attachUniversalToHonoNodeServer(
   {
     middlewares: {
       use: (handler) => {
@@ -320,39 +320,39 @@ await attachUniversaToHonoNodeServer(
 ### Rsbuild and Rspack integration
 
 ```ts
-import { withUniversaRsbuild } from "universa-kit/rsbuild";
-import { withUniversaRspack } from "universa-kit/rspack";
+import { withUniversalRsbuild } from "universal-bridge/rsbuild";
+import { withUniversalRspack } from "universal-bridge/rspack";
 
-export const rsbuildConfig = withUniversaRsbuild({});
-export const rspackConfig = withUniversaRspack({});
+export const rsbuildConfig = withUniversalRsbuild({});
+export const rspackConfig = withUniversalRspack({});
 ```
 
 ### Astro and Nuxt integration
 
 ```ts
 import { defineConfig as defineAstroConfig } from "astro/config";
-import { createUniversaAstroIntegration } from "universa-kit/astro";
+import { createUniversalAstroIntegration } from "universal-bridge/astro";
 
 export default defineAstroConfig({
-  integrations: [createUniversaAstroIntegration()],
+  integrations: [createUniversalAstroIntegration()],
 });
 ```
 
 ```ts
 import { defineNuxtConfig } from "nuxt/config";
-import { createUniversaNuxtModule } from "universa-kit/nuxt";
+import { createUniversalNuxtModule } from "universal-bridge/nuxt";
 
 export default defineNuxtConfig({
-  modules: [createUniversaNuxtModule()],
+  modules: [createUniversalNuxtModule()],
 });
 ```
 
 ### Angular CLI proxy integration
 
 ```ts
-import { createUniversaAngularCliProxyConfig } from "universa-kit/angular/cli";
+import { createUniversalAngularCliProxyConfig } from "universal-bridge/angular/cli";
 
-const proxyConfig = await createUniversaAngularCliProxyConfig({
+const proxyConfig = await createUniversalAngularCliProxyConfig({
   command: "acmetool",
   args: ["dev"],
 });
@@ -361,9 +361,9 @@ const proxyConfig = await createUniversaAngularCliProxyConfig({
 ### Standalone bridge (tooling/tests)
 
 ```ts
-import { startStandaloneUniversaBridgeServer } from "universa-kit";
+import { startStandaloneUniversalBridgeServer } from "universal-bridge";
 
-const standalone = await startStandaloneUniversaBridgeServer({
+const standalone = await startStandaloneUniversalBridgeServer({
   command: "acmetool",
   args: ["dev"],
 });

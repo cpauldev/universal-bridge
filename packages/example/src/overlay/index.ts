@@ -1,4 +1,4 @@
-import { resolveClientAutoMount } from "universa-kit/client-runtime";
+import { resolveClientAutoMount } from "universal-bridge/client-runtime";
 
 import {
   OVERLAY_INSTANCE_GLOBAL_KEY,
@@ -130,7 +130,7 @@ export { ExampleOverlay };
 export { createExampleApi } from "./api.js";
 export type { ExampleApi } from "./api.js";
 export type { OverlayMountOptions };
-export type { UniversaBridgeState, UniversaRuntimeStatus } from "./types.js";
+export type { UniversalBridgeState, UniversalRuntimeStatus } from "./types.js";
 
 // Auto-mount when imported as the adapter-injected overlay entry.
 if (isBrowserRuntime() && shouldMountOverlay()) {

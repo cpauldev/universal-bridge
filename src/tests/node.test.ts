@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 
 import {
-  attachUniversaToNodeServer,
+  attachUniversalToNodeServer,
   createNodeBridgeLifecycle,
 } from "../adapters/server/node.js";
 import { createMiddlewareAdapterServerFixture } from "./utils/adapter-server-fixtures.js";
@@ -9,7 +9,7 @@ import { createMiddlewareAdapterServerFixture } from "./utils/adapter-server-fix
 describe("node adapter", () => {
   it("attaches and tears down bridge lifecycle", async () => {
     const fixture = createMiddlewareAdapterServerFixture();
-    const handle = await attachUniversaToNodeServer(fixture.server, {
+    const handle = await attachUniversalToNodeServer(fixture.server, {
       autoStart: false,
     });
 

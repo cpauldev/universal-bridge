@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "universa-kit",
+      "name": "universal-bridge",
       "dependencies": {
         "execa": "^9.6.0",
         "ws": "^8.19.0",
@@ -196,7 +196,7 @@
         "react-dom": "^19.2.4",
         "sileo": "^0.1.5",
         "tailwind-merge": "^3.0.2",
-        "universa-kit": "file:../..",
+        "universal-bridge": "file:../..",
       },
       "devDependencies": {
         "@tailwindcss/cli": "^4.1.0",
@@ -2357,7 +2357,7 @@
 
     "unist-util-visit-parents": ["unist-util-visit-parents@6.0.2", "", { "dependencies": { "@types/unist": "^3.0.0", "unist-util-is": "^6.0.0" } }, "sha512-goh1s1TBrqSqukSc8wrjwWhL0hiJxgA8m4kFxGlQ+8FYQ3C/m11FcTs4YYem7V664AhHVvgoQLk890Ssdsr2IQ=="],
 
-    "universa-kit": ["universa-kit@root:", {}],
+    "universal-bridge": ["universal-bridge@root:", {}],
 
     "unpic": ["unpic@4.2.2", "", {}, "sha512-z6T2ScMgRV2y2H8MwwhY5xHZWXhUx/YxtOCGJwfURSl7ypVy4HpLIMWoIZKnnxQa/RKzM0kg8hUh0paIrpLfvw=="],
 

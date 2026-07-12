@@ -1,10 +1,10 @@
-# Universa Examples
+# Universal Examples
 
 This document explains the workspace examples under `examples/` and how to run/verify them.
 
 ## What examples are included?
 
-Each example mounts the `example` package (from `packages/example`) into a framework dev server and exposes bridge routes under `/__universa/example/*`.
+Each example mounts the `example` package (from `packages/example`) into a framework dev server and exposes bridge routes under `/__universal/example/*`.
 
 | ID          | Framework  | Starting port |
 | ----------- | ---------- | ------------- |
@@ -34,7 +34,7 @@ bun run examples:setup
 This script:
 
 1. installs workspace dependencies (`bun install`)
-2. builds `universa-kit`
+2. builds `universal-bridge`
 3. builds `packages/example`
 
 Optional force re-link:
@@ -77,8 +77,8 @@ bun run verify:examples
 
 Verification checks each running example for:
 
-- `GET /__universa/example/health`
-- `GET /__universa/example/state`
+- `GET /__universal/example/health`
+- `GET /__universal/example/state`
 
 You can target specific examples:
 

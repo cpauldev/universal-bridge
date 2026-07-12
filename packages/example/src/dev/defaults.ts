@@ -1,13 +1,16 @@
 import { existsSync } from "fs";
 import { basename, dirname, join } from "path";
-import type { RuntimeHelperOptions, UniversaBridgeOptions } from "universa-kit";
 import type {
-  UniversaPresetIdentity,
-  UniversaPresetOptions,
-} from "universa-kit/preset";
+  RuntimeHelperOptions,
+  UniversalBridgeOptions,
+} from "universal-bridge";
+import type {
+  UniversalPresetIdentity,
+  UniversalPresetOptions,
+} from "universal-bridge/preset";
 import { fileURLToPath } from "url";
 
-export const EXAMPLE_BRIDGE_PATH_PREFIX = "/__universa/example";
+export const EXAMPLE_BRIDGE_PATH_PREFIX = "/__universal/example";
 export const EXAMPLE_RUNTIME_HEALTH_PATH = "/api/version";
 export const EXAMPLE_RUNTIME_PORT_ENV_VAR = "EXAMPLE_RUNTIME_PORT";
 export const EXAMPLE_RUNTIME_FALLBACK_COMMAND = "example dev";
@@ -19,7 +22,7 @@ type ExampleInstanceOptions = {
   label?: string;
 };
 
-type ExampleBridgeOptions = UniversaBridgeOptions & {
+type ExampleBridgeOptions = UniversalBridgeOptions & {
   instance?: ExampleInstanceOptions;
   proxyRuntimeWebSocket?: boolean;
 };
@@ -97,8 +100,8 @@ export function resolveExampleRuntimeOptions(
 }
 
 export function resolveExampleBridgeOptions(
-  options: UniversaBridgeOptions = {},
-): UniversaBridgeOptions {
+  options: UniversalBridgeOptions = {},
+): UniversalBridgeOptions {
   const bridgeOptions = options as ExampleBridgeOptions;
   const instance = resolveExampleInstance(bridgeOptions);
 
@@ -109,18 +112,18 @@ export function resolveExampleBridgeOptions(
       options.fallbackCommand ?? EXAMPLE_RUNTIME_FALLBACK_COMMAND,
     proxyRuntimeWebSocket: bridgeOptions.proxyRuntimeWebSocket ?? false,
     instance,
-  } as UniversaBridgeOptions;
+  } as UniversalBridgeOptions;
 }
 
-export type ExampleConfigOptions = Omit<UniversaPresetOptions, "identity"> & {
-  identity?: Omit<UniversaPresetIdentity, "packageName"> & {
+export type ExampleConfigOptions = Omit<UniversalPresetOptions, "identity"> & {
+  identity?: Omit<UniversalPresetIdentity, "packageName"> & {
     packageName?: string;
   };
 };
 
 export function resolveExampleConfigOptions(
   options: ExampleConfigOptions = {},
-): UniversaPresetOptions {
+): UniversalPresetOptions {
   const {
     identity,
     unsafeOverrides,

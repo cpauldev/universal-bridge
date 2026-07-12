@@ -1,24 +1,24 @@
-# Universa Bridge Protocol (v1)
+# Universal Bridge Protocol (v1)
 
-This document is the normative contract for the Universa bridge protocol implemented in `src/bridge/*`.
+This document is the normative contract for the Universal bridge protocol implemented in `src/bridge/*`.
 
 ## Versioning
 
 - Protocol version: `1`
 - Bridge state field: `protocolVersion: "1"`
-- Supported websocket subprotocol: `universa.v1+json`
+- Supported websocket subprotocol: `universal.v1+json`
 
 Backward-incompatible protocol changes must increment the protocol version.
 Adapter API naming changes alone do not require a protocol version bump unless route/event/error semantics change.
 
 ## Route prefix
 
-Default bridge prefix: `/__universa`
+Default bridge prefix: `/__universal`
 
 Prefix behavior:
 
-- Custom prefixes are normalized to stay rooted under `/__universa`.
-- Preset integrations typically use `/__universa/<namespaceId>`.
+- Custom prefixes are normalized to stay rooted under `/__universal`.
+- Preset integrations typically use `/__universal/<namespaceId>`.
 
 All routes below are relative to the effective bridge prefix.
 
@@ -36,7 +36,7 @@ All routes below are relative to the effective bridge prefix.
 
 Route matching is pathname-based and query-safe.
 
-Example: `GET /__universa/state?source=ui` is handled as `GET /state`.
+Example: `GET /__universal/state?source=ui` is handled as `GET /state`.
 
 ## Health and state contracts
 
@@ -55,8 +55,8 @@ Returns:
     | "runtime_starting"
     | "connected"
     | "degraded";
-  runtime: UniversaRuntimeStatus;
-  capabilities: UniversaBridgeCapabilities;
+  runtime: UniversalRuntimeStatus;
+  capabilities: UniversalBridgeCapabilities;
   instance?: { id: string; label?: string };
   error?: string;
 }
@@ -64,10 +64,10 @@ Returns:
 
 ### `GET /state`
 
-Returns `UniversaBridgeState`:
+Returns `UniversalBridgeState`:
 
 ```ts
-interface UniversaBridgeState {
+interface UniversalBridgeState {
   protocolVersion: "1";
   transportState:
     | "disconnected"
@@ -75,8 +75,8 @@ interface UniversaBridgeState {
     | "runtime_starting"
     | "connected"
     | "degraded";
-  runtime: UniversaRuntimeStatus;
-  capabilities: UniversaBridgeCapabilities;
+  runtime: UniversalRuntimeStatus;
+  capabilities: UniversalBridgeCapabilities;
   instance?: { id: string; label?: string };
   error?: string;
 }
@@ -107,9 +107,9 @@ Required missing-command behavior for `start`/`restart`:
 
 Subprotocol behavior:
 
-- If `Sec-WebSocket-Protocol` is supplied, offered values must include `universa.v1+json`.
+- If `Sec-WebSocket-Protocol` is supplied, offered values must include `universal.v1+json`.
 - Unsupported offered protocol list is rejected with `426`.
-- If the header is supplied and accepted, the negotiated protocol is `universa.v1+json`.
+- If the header is supplied and accepted, the negotiated protocol is `universal.v1+json`.
 - If the header is omitted, the connection may still be accepted without negotiated subprotocol.
 
 Event union:

@@ -1,125 +1,125 @@
 import {
   type RsbuildConfig,
-  type RsbuildUniversaOptions,
-  withUniversaRsbuild,
+  type RsbuildUniversalOptions,
+  withUniversalRsbuild,
 } from "./adapters/build/rsbuild.js";
 import {
   type RspackConfig,
-  type RspackUniversaOptions,
-  withUniversaRspack,
+  type RspackUniversalOptions,
+  withUniversalRspack,
 } from "./adapters/build/rspack.js";
 import {
   type WebpackDevServerConfig,
-  type WebpackUniversaOptions,
-  withUniversaWebpackDevServer,
+  type WebpackUniversalOptions,
+  withUniversalWebpackDevServer,
 } from "./adapters/build/webpack.js";
 import {
-  type AngularCliUniversaOptions,
-  type AngularCliUniversaProxyConfig,
-  createUniversaAngularCliProxyConfig,
-  startUniversaAngularCliBridge,
-  withUniversaAngularCliProxyConfig,
+  type AngularCliUniversalOptions,
+  type AngularCliUniversalProxyConfig,
+  createUniversalAngularCliProxyConfig,
+  startUniversalAngularCliBridge,
+  withUniversalAngularCliProxyConfig,
 } from "./adapters/framework/angular-cli.js";
 import {
-  type AstroUniversaOptions,
-  createUniversaAstroIntegration,
+  type AstroUniversalOptions,
+  createUniversalAstroIntegration,
 } from "./adapters/framework/astro.js";
 import {
-  type UniversaNextOptions,
-  withUniversaNext,
+  type UniversalNextOptions,
+  withUniversalNext,
 } from "./adapters/framework/next.js";
 import {
-  type UniversaNuxtOptions,
-  createUniversaNuxtModule,
+  type UniversalNuxtOptions,
+  createUniversalNuxtModule,
 } from "./adapters/framework/nuxt.js";
 import {
   type BunBridgeHandle,
-  type BunUniversaOptions,
-  attachUniversaToBunServe,
+  type BunUniversalOptions,
+  attachUniversalToBunServe,
 } from "./adapters/server/bun.js";
 import {
   type FastifyBridgeHandle,
   type FastifyLikeInstance,
-  type FastifyUniversaOptions,
-  attachUniversaToFastify,
+  type FastifyUniversalOptions,
+  attachUniversalToFastify,
 } from "./adapters/server/fastify.js";
 import {
   type HonoBridgeHandle,
   type HonoNodeServer,
-  type HonoUniversaOptions,
-  attachUniversaToHonoNodeServer,
+  type HonoUniversalOptions,
+  attachUniversalToHonoNodeServer,
 } from "./adapters/server/hono.js";
 import {
   type NodeBridgeHandle,
-  type NodeUniversaOptions,
-  attachUniversaToNodeServer,
+  type NodeUniversalOptions,
+  attachUniversalToNodeServer,
 } from "./adapters/server/node.js";
 import {
-  type UniversaVitePluginOptions,
-  createUniversaVitePlugin,
+  type UniversalVitePluginOptions,
+  createUniversalVitePlugin,
 } from "./adapters/shared/plugin.js";
 import {
   buildBridgeRewriteSource,
   normalizeBridgePathPrefix,
 } from "./bridge/prefix.js";
 import {
-  type UniversaCompositionMode,
-  type UniversaPresetOptions,
-  type UniversaPresetRegistration,
-  registerUniversaPreset,
+  type UniversalCompositionMode,
+  type UniversalPresetOptions,
+  type UniversalPresetRegistration,
+  registerUniversalPreset,
   resolveFrameworkComposition,
 } from "./preset-registry.js";
 
 export type {
-  UniversaCompositionMode,
-  UniversaPresetIdentity,
-  UniversaPresetOptions,
+  UniversalCompositionMode,
+  UniversalPresetIdentity,
+  UniversalPresetOptions,
 } from "./preset-registry.js";
 
-export interface UniversaPreset {
+export interface UniversalPreset {
   vite: (
-    options?: UniversaVitePluginOptions,
+    options?: UniversalVitePluginOptions,
   ) =>
-    | ReturnType<typeof createUniversaVitePlugin>
-    | ReturnType<typeof createUniversaVitePlugin>[];
-  next: <T extends object>(nextConfig: T, options?: UniversaNextOptions) => T;
+    | ReturnType<typeof createUniversalVitePlugin>
+    | ReturnType<typeof createUniversalVitePlugin>[];
+  next: <T extends object>(nextConfig: T, options?: UniversalNextOptions) => T;
   nuxt: (
-    options?: UniversaNuxtOptions,
-  ) => ReturnType<typeof createUniversaNuxtModule>;
+    options?: UniversalNuxtOptions,
+  ) => ReturnType<typeof createUniversalNuxtModule>;
   astro: (
-    options?: AstroUniversaOptions,
-  ) => ReturnType<typeof createUniversaAstroIntegration>;
+    options?: AstroUniversalOptions,
+  ) => ReturnType<typeof createUniversalAstroIntegration>;
   angularCli: {
     startBridge: (
-      options?: AngularCliUniversaOptions,
-    ) => ReturnType<typeof startUniversaAngularCliBridge>;
+      options?: AngularCliUniversalOptions,
+    ) => ReturnType<typeof startUniversalAngularCliBridge>;
     createProxyConfig: (
-      options?: AngularCliUniversaOptions,
-    ) => ReturnType<typeof createUniversaAngularCliProxyConfig>;
+      options?: AngularCliUniversalOptions,
+    ) => ReturnType<typeof createUniversalAngularCliProxyConfig>;
     withProxyConfig: (
-      existingProxyConfig?: AngularCliUniversaProxyConfig,
-      options?: AngularCliUniversaOptions,
-    ) => ReturnType<typeof withUniversaAngularCliProxyConfig>;
+      existingProxyConfig?: AngularCliUniversalProxyConfig,
+      options?: AngularCliUniversalOptions,
+    ) => ReturnType<typeof withUniversalAngularCliProxyConfig>;
   };
   bun: {
-    attach: (options?: BunUniversaOptions) => Promise<BunBridgeHandle>;
+    attach: (options?: BunUniversalOptions) => Promise<BunBridgeHandle>;
   };
   node: {
     attach: (
-      server: Parameters<typeof attachUniversaToNodeServer>[0],
-      options?: NodeUniversaOptions,
+      server: Parameters<typeof attachUniversalToNodeServer>[0],
+      options?: NodeUniversalOptions,
     ) => Promise<NodeBridgeHandle>;
   };
   fastify: {
     attach: (
       fastify: FastifyLikeInstance,
-      options?: FastifyUniversaOptions,
+      options?: FastifyUniversalOptions,
     ) => Promise<FastifyBridgeHandle>;
   };
   hono: {
     attach: (
       server: HonoNodeServer,
-      options?: HonoUniversaOptions,
+      options?: HonoUniversalOptions,
     ) => Promise<HonoBridgeHandle>;
   };
   webpack: {
@@ -128,7 +128,7 @@ export interface UniversaPreset {
       TConfig extends WebpackDevServerConfig<TMiddlewares>,
     >(
       config: TConfig,
-      options?: WebpackUniversaOptions,
+      options?: WebpackUniversalOptions,
     ) => TConfig & WebpackDevServerConfig<TMiddlewares>;
   };
   rsbuild: {
@@ -137,7 +137,7 @@ export interface UniversaPreset {
       TConfig extends RsbuildConfig<TMiddlewares>,
     >(
       config: TConfig,
-      options?: RsbuildUniversaOptions,
+      options?: RsbuildUniversalOptions,
     ) => TConfig & RsbuildConfig<TMiddlewares>;
   };
   rspack: {
@@ -146,7 +146,7 @@ export interface UniversaPreset {
       TConfig extends RspackConfig<TMiddlewares>,
     >(
       config: TConfig,
-      options?: RspackUniversaOptions,
+      options?: RspackUniversalOptions,
     ) => TConfig & RspackConfig<TMiddlewares>;
   };
 }
@@ -173,7 +173,9 @@ type FrameworkActivation =
     }
   | undefined;
 
-const FRAMEWORK_ACTIVATION_SYMBOL = Symbol.for("universa.framework.activation");
+const FRAMEWORK_ACTIVATION_SYMBOL = Symbol.for(
+  "universal.framework.activation",
+);
 
 function getFrameworkActivationStore(): FrameworkActivationStore {
   const runtimeGlobal = globalThis as typeof globalThis & {
@@ -193,7 +195,7 @@ function getFrameworkActivationStore(): FrameworkActivationStore {
 
 function reserveFrameworkActivation(
   framework: FrameworkAdapterKind,
-  composition: UniversaCompositionMode,
+  composition: UniversalCompositionMode,
 ): FrameworkActivation {
   if (composition === "local") return undefined;
 
@@ -219,7 +221,7 @@ function withFrameworkActivation<T extends object>(
   } as T;
 }
 
-type VitePlugin = ReturnType<typeof createUniversaVitePlugin>;
+type VitePlugin = ReturnType<typeof createUniversalVitePlugin>;
 function guardVitePlugin(
   framework: FrameworkAdapterKind,
   plugin: VitePlugin,
@@ -280,8 +282,8 @@ function mergeAdapterOptions<T extends object>(
   return merged;
 }
 
-type NuxtModule = ReturnType<typeof createUniversaNuxtModule>;
-type AstroIntegration = ReturnType<typeof createUniversaAstroIntegration>;
+type NuxtModule = ReturnType<typeof createUniversalNuxtModule>;
+type AstroIntegration = ReturnType<typeof createUniversalAstroIntegration>;
 
 function guardNuxtModule(
   module: NuxtModule,
@@ -310,14 +312,14 @@ function composeNuxtModules(modules: NuxtModule[]): NuxtModule {
     .map((module) =>
       typeof module.meta.name === "string" && module.meta.name
         ? module.meta.name
-        : "universa-module",
+        : "universal-module",
     )
     .join("+");
 
   return Object.assign(setup, {
     meta: {
       name: `composed:${names}`,
-      configKey: "universa",
+      configKey: "universal",
     },
   });
 }
@@ -384,10 +386,10 @@ function composeAstroIntegrations(
   };
 }
 
-export function createUniversaPreset(
-  baseOptions: UniversaPresetOptions,
-): UniversaPreset {
-  const registration = registerUniversaPreset(baseOptions);
+export function createUniversalPreset(
+  baseOptions: UniversalPresetOptions,
+): UniversalPreset {
+  const registration = registerUniversalPreset(baseOptions);
 
   function withLocalOptions<T extends object>(options?: Partial<T>): T {
     return mergeAdapterOptions(registration.effectiveOptions as T, options);
@@ -395,7 +397,7 @@ export function createUniversaPreset(
 
   function getFrameworkRegistrations<T extends object>(
     options?: Partial<T>,
-  ): UniversaPresetRegistration[] {
+  ): UniversalPresetRegistration[] {
     const entries = resolveFrameworkComposition(registration);
     return entries.map((entry) =>
       entry.id === registration.id
@@ -420,7 +422,7 @@ export function createUniversaPreset(
       const plugins = entries.map((entry) =>
         guardVitePlugin(
           "vite",
-          createUniversaVitePlugin(
+          createUniversalVitePlugin(
             withFrameworkActivation(
               entry.effectiveOptions,
               activation?.isActive,
@@ -434,7 +436,7 @@ export function createUniversaPreset(
     },
     next<T extends object>(
       nextConfig: T,
-      options: UniversaNextOptions = {},
+      options: UniversalNextOptions = {},
     ): T {
       const activation = reserveFrameworkActivation(
         "next",
@@ -443,7 +445,7 @@ export function createUniversaPreset(
       const entries = getFrameworkRegistrations(options);
       return entries.reduce<T>(
         (config, entry) =>
-          withUniversaNext(
+          withUniversalNext(
             config,
             withFrameworkActivation(
               entry.effectiveOptions,
@@ -460,7 +462,7 @@ export function createUniversaPreset(
       );
       const entries = getFrameworkRegistrations(options);
       const modules = entries.map((entry) =>
-        createUniversaNuxtModule(
+        createUniversalNuxtModule(
           withFrameworkActivation(entry.effectiveOptions, activation?.isActive),
         ),
       );
@@ -473,7 +475,7 @@ export function createUniversaPreset(
       );
       const entries = getFrameworkRegistrations(options);
       const integrations = entries.map((entry) =>
-        createUniversaAstroIntegration(
+        createUniversalAstroIntegration(
           withFrameworkActivation(entry.effectiveOptions, activation?.isActive),
         ),
       );
@@ -484,30 +486,30 @@ export function createUniversaPreset(
     },
     angularCli: {
       startBridge: (options = {}) =>
-        startUniversaAngularCliBridge(withLocalOptions(options)),
+        startUniversalAngularCliBridge(withLocalOptions(options)),
       createProxyConfig: (options = {}) =>
-        createUniversaAngularCliProxyConfig(withLocalOptions(options)),
+        createUniversalAngularCliProxyConfig(withLocalOptions(options)),
       withProxyConfig: (existingProxyConfig = {}, options = {}) =>
-        withUniversaAngularCliProxyConfig(
+        withUniversalAngularCliProxyConfig(
           existingProxyConfig,
           withLocalOptions(options),
         ),
     },
     bun: {
       attach: (options = {}) =>
-        attachUniversaToBunServe(withLocalOptions(options)),
+        attachUniversalToBunServe(withLocalOptions(options)),
     },
     node: {
       attach: (server, options = {}) =>
-        attachUniversaToNodeServer(server, withLocalOptions(options)),
+        attachUniversalToNodeServer(server, withLocalOptions(options)),
     },
     fastify: {
       attach: (fastify, options = {}) =>
-        attachUniversaToFastify(fastify, withLocalOptions(options)),
+        attachUniversalToFastify(fastify, withLocalOptions(options)),
     },
     hono: {
       attach: (server, options = {}) =>
-        attachUniversaToHonoNodeServer(server, withLocalOptions(options)),
+        attachUniversalToHonoNodeServer(server, withLocalOptions(options)),
     },
     webpack: {
       withDevServer: <
@@ -515,7 +517,7 @@ export function createUniversaPreset(
         TConfig extends WebpackDevServerConfig<TMiddlewares>,
       >(
         config: TConfig,
-        options: WebpackUniversaOptions = {},
+        options: WebpackUniversalOptions = {},
       ) => {
         const activation = reserveFrameworkActivation(
           "webpack",
@@ -525,7 +527,7 @@ export function createUniversaPreset(
         let nextConfig = config as TConfig &
           WebpackDevServerConfig<TMiddlewares>;
         for (const entry of entries) {
-          nextConfig = withUniversaWebpackDevServer(
+          nextConfig = withUniversalWebpackDevServer(
             nextConfig,
             withFrameworkActivation(
               entry.effectiveOptions,
@@ -542,7 +544,7 @@ export function createUniversaPreset(
         TConfig extends RsbuildConfig<TMiddlewares>,
       >(
         config: TConfig,
-        options: RsbuildUniversaOptions = {},
+        options: RsbuildUniversalOptions = {},
       ) => {
         const activation = reserveFrameworkActivation(
           "rsbuild",
@@ -551,7 +553,7 @@ export function createUniversaPreset(
         const entries = getFrameworkRegistrations(options);
         let nextConfig = config as TConfig & RsbuildConfig<TMiddlewares>;
         for (const entry of entries) {
-          nextConfig = withUniversaRsbuild(
+          nextConfig = withUniversalRsbuild(
             nextConfig,
             withFrameworkActivation(
               entry.effectiveOptions,
@@ -568,7 +570,7 @@ export function createUniversaPreset(
         TConfig extends RspackConfig<TMiddlewares>,
       >(
         config: TConfig,
-        options: RspackUniversaOptions = {},
+        options: RspackUniversalOptions = {},
       ) => {
         const activation = reserveFrameworkActivation(
           "rspack",
@@ -577,7 +579,7 @@ export function createUniversaPreset(
         const entries = getFrameworkRegistrations(options);
         let nextConfig = config as TConfig & RspackConfig<TMiddlewares>;
         for (const entry of entries) {
-          nextConfig = withUniversaRspack(
+          nextConfig = withUniversalRspack(
             nextConfig,
             withFrameworkActivation(
               entry.effectiveOptions,

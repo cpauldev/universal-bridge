@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "bun:test";
 
 import {
-  type UniversaClientRuntimeContext,
+  type UniversalClientRuntimeContext,
   createClientRuntimeContext,
   registerClientRuntimeContext,
   resolveClientAutoMount,
@@ -9,7 +9,7 @@ import {
 } from "../client/runtime-context.js";
 
 const CLIENT_MODULE = "@tests/client";
-const GLOBAL_CONTEXTS_KEY = "__UNIVERSA_CLIENT_RUNTIME_CONTEXTS__";
+const GLOBAL_CONTEXTS_KEY = "__UNIVERSAL_CLIENT_RUNTIME_CONTEXTS__";
 
 type MockWindow = {
   location: { search: string };
@@ -19,7 +19,7 @@ type MockWindow = {
   };
 };
 
-function createClientContext(): UniversaClientRuntimeContext {
+function createClientContext(): UniversalClientRuntimeContext {
   return createClientRuntimeContext({
     namespaceId: "tests-client",
   });
@@ -59,25 +59,25 @@ describe("client runtime context", () => {
     });
 
     expect(context.namespaceId).toBe("tests-client");
-    expect(context.bridgePathPrefix).toBe("/__universa/tests-client");
-    expect(context.keyPrefix).toBe("universa:client:tests-client");
-    expect(context.rootId).toBe("universa-client-tests-client");
+    expect(context.bridgePathPrefix).toBe("/__universal/tests-client");
+    expect(context.keyPrefix).toBe("universal:client:tests-client");
+    expect(context.rootId).toBe("universal-client-tests-client");
     expect(context.instanceKey).toBe(
-      "__UNIVERSA_CLIENT_INSTANCE__:tests-client",
+      "__UNIVERSAL_CLIENT_INSTANCE__:tests-client",
     );
-    expect(context.stateStorageKey).toBe("universa:client:tests-client:state");
+    expect(context.stateStorageKey).toBe("universal:client:tests-client:state");
     expect(context.enabledStorageKey).toBe(
-      "universa:client:tests-client:enabled",
+      "universal:client:tests-client:enabled",
     );
   });
 
-  it("accepts explicit bridge path prefix and keeps universa root", () => {
+  it("accepts explicit bridge path prefix and keeps universal root", () => {
     const context = createClientRuntimeContext({
       namespaceId: "tests-client",
       bridgePathPrefix: "custom/tests-client",
     });
 
-    expect(context.bridgePathPrefix).toBe("/__universa/custom/tests-client");
+    expect(context.bridgePathPrefix).toBe("/__universal/custom/tests-client");
   });
 
   it("registers and resolves client contexts by module specifier", () => {
@@ -91,11 +91,11 @@ describe("client runtime context", () => {
     const context = createClientContext();
     registerClientRuntimeContext(CLIENT_MODULE, context);
 
-    const scopedQueryKey = `universaClient.${context.namespaceId}`;
-    installMockWindow(`?${scopedQueryKey}=false&universaClient=true`);
+    const scopedQueryKey = `universalClient.${context.namespaceId}`;
+    installMockWindow(`?${scopedQueryKey}=false&universalClient=true`);
     expect(resolveClientAutoMount(CLIENT_MODULE, true)).toBe(false);
 
-    const { storage } = installMockWindow("?universaClient=false");
+    const { storage } = installMockWindow("?universalClient=false");
     storage.set(context.enabledStorageKey, "true");
     expect(resolveClientAutoMount(CLIENT_MODULE, true)).toBe(false);
 
@@ -110,7 +110,7 @@ describe("client runtime context", () => {
       clientEnabled: false,
       autoMount: true,
     });
-    installMockWindow("?universaClient=true");
+    installMockWindow("?universalClient=true");
     expect(resolveClientAutoMount(CLIENT_MODULE, true)).toBe(false);
   });
 });

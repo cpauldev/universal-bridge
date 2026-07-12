@@ -1,10 +1,10 @@
 import {
   type StandaloneBridgeServer,
-  UniversaBridge,
-  type UniversaBridgeOptions,
-  startStandaloneUniversaBridgeServer,
-} from "universa-kit";
-import { createUniversaPreset } from "universa-kit/preset";
+  UniversalBridge,
+  type UniversalBridgeOptions,
+  startStandaloneUniversalBridgeServer,
+} from "universal-bridge";
+import { createUniversalPreset } from "universal-bridge/preset";
 
 import {
   type ExampleConfigOptions,
@@ -12,10 +12,10 @@ import {
   resolveExampleConfigOptions,
 } from "./defaults.js";
 
-export type ExampleBridgeOptions = UniversaBridgeOptions;
+export type ExampleBridgeOptions = UniversalBridgeOptions;
 export type { StandaloneBridgeServer };
 
-export class ExampleBridge extends UniversaBridge {
+export class ExampleBridge extends UniversalBridge {
   constructor(options: ExampleBridgeOptions = {}) {
     super(resolveExampleBridgeOptions(options));
   }
@@ -30,11 +30,11 @@ export function createExampleBridge(
 export async function startStandaloneExampleBridgeServer(
   options: ExampleBridgeOptions = {},
 ): Promise<StandaloneBridgeServer> {
-  return startStandaloneUniversaBridgeServer(
+  return startStandaloneUniversalBridgeServer(
     resolveExampleBridgeOptions(options),
   );
 }
 
 export function example(options: ExampleConfigOptions = {}) {
-  return createUniversaPreset(resolveExampleConfigOptions(options));
+  return createUniversalPreset(resolveExampleConfigOptions(options));
 }

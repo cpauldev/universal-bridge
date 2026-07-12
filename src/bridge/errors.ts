@@ -1,8 +1,8 @@
 import type { ServerResponse } from "http";
 import type { Duplex } from "stream";
 
-import type { UniversaErrorCode, UniversaErrorPayload } from "../types.js";
-import { UNIVERSA_WS_SUBPROTOCOL } from "./constants.js";
+import type { UniversalErrorCode, UniversalErrorPayload } from "../types.js";
+import { UNIVERSAL_WS_SUBPROTOCOL } from "./constants.js";
 import { writeError } from "./http.js";
 
 interface BridgeErrorOptions {
@@ -13,11 +13,11 @@ interface BridgeErrorOptions {
 export function writeBridgeError(
   res: ServerResponse,
   statusCode: number,
-  code: UniversaErrorCode,
+  code: UniversalErrorCode,
   message: string,
   options?: BridgeErrorOptions,
 ): void {
-  const error: UniversaErrorPayload = {
+  const error: UniversalErrorPayload = {
     code,
     message,
     retryable: options?.retryable ?? false,
@@ -40,9 +40,9 @@ export function rejectUpgrade(
       message,
       retryable: false,
       details: {
-        wsSubprotocol: UNIVERSA_WS_SUBPROTOCOL,
+        wsSubprotocol: UNIVERSAL_WS_SUBPROTOCOL,
       },
-    } satisfies UniversaErrorPayload,
+    } satisfies UniversalErrorPayload,
   });
   const reason = statusCode === 426 ? "Upgrade Required" : "Bad Request";
   const responseText =

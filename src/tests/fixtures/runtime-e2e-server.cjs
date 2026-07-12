@@ -1,10 +1,10 @@
 const http = require("http");
 
 const host = "127.0.0.1";
-const port = Number(process.env.UNIVERSA_RUNTIME_PORT || 0);
+const port = Number(process.env.UNIVERSAL_RUNTIME_PORT || 0);
 
 if (!port || Number.isNaN(port)) {
-  throw new Error("UNIVERSA_RUNTIME_PORT is required");
+  throw new Error("UNIVERSAL_RUNTIME_PORT is required");
 }
 
 function writeJson(res, statusCode, payload) {

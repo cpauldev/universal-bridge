@@ -4,7 +4,7 @@ import {
   createBridgeLifecycle,
   resolveAdapterOptions,
   type BridgeLifecycle,
-  type UniversaAdapterOptions,
+  type UniversalAdapterOptions,
   type MiddlewareAdapterServer,
 } from "../shared/adapter-utils.js";
 
@@ -59,18 +59,18 @@ function toMiddlewareAdapterServer(
 }
 
 export function createSetupMiddlewaresBridgeLifecycle(
-  options: UniversaAdapterOptions = {},
+  options: UniversalAdapterOptions = {},
 ): BridgeLifecycle {
   return createBridgeLifecycle(resolveAdapterOptions(options));
 }
 
-export function withUniversaSetupMiddlewares<
+export function withUniversalSetupMiddlewares<
   TMiddlewares extends unknown[],
   TDevServer extends SetupMiddlewaresDevServerLike,
   TConfig extends SetupMiddlewaresConfig<TMiddlewares, TDevServer>,
 >(
   config: TConfig,
-  options: UniversaAdapterOptions = {},
+  options: UniversalAdapterOptions = {},
 ): TConfig & SetupMiddlewaresConfig<TMiddlewares, TDevServer> {
   const resolvedOptions = resolveAdapterOptions(options);
   const isFrameworkActive = resolvedOptions._frameworkIsActive;

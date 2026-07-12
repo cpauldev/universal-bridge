@@ -1,4 +1,4 @@
-import type { UniversaBridgeState } from "universa-kit";
+import type { UniversalBridgeState } from "universal-bridge";
 
 import type { ExampleApi } from "../overlay/api.js";
 import type { FileMetadata, FileTreeNode } from "../overlay/types.js";
@@ -16,7 +16,7 @@ export interface DashboardLiveState {
   hasBootstrapped: boolean;
   connected: boolean;
   transportState: DashboardTransportState;
-  bridgeState: UniversaBridgeState | null;
+  bridgeState: UniversalBridgeState | null;
   errorMessage: string | null;
   lastUpdatedAt: number | null;
   consecutiveFailures: number;

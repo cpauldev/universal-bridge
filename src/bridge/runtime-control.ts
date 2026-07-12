@@ -1,17 +1,17 @@
 import type { ServerResponse } from "http";
 
-import type { UniversaBridgeState, UniversaRuntimeStatus } from "../types.js";
+import type { UniversalBridgeState, UniversalRuntimeStatus } from "../types.js";
 import { writeJson } from "./http.js";
 
 export interface RuntimeControlContext {
   shouldAutoStartRuntime: () => boolean;
   hasRuntimeControl: () => boolean;
   fallbackCommand: string;
-  getState: () => UniversaBridgeState;
-  getRuntimeStatus: () => UniversaRuntimeStatus;
-  startRuntime: () => Promise<UniversaRuntimeStatus>;
-  restartRuntime: () => Promise<UniversaRuntimeStatus>;
-  stopRuntime: () => Promise<UniversaRuntimeStatus>;
+  getState: () => UniversalBridgeState;
+  getRuntimeStatus: () => UniversalRuntimeStatus;
+  startRuntime: () => Promise<UniversalRuntimeStatus>;
+  restartRuntime: () => Promise<UniversalRuntimeStatus>;
+  stopRuntime: () => Promise<UniversalRuntimeStatus>;
   enableAutoStartRuntime: () => void;
   disableAutoStartRuntime: () => void;
   emitRuntimeError: (error: string) => void;
@@ -124,7 +124,7 @@ async function handleControlAction(
   res: ServerResponse,
   context: RuntimeControlContext,
   errorCode: "runtime_start_failed" | "runtime_control_failed",
-  action: () => Promise<UniversaRuntimeStatus>,
+  action: () => Promise<UniversalRuntimeStatus>,
 ): Promise<void> {
   try {
     const status = await action();

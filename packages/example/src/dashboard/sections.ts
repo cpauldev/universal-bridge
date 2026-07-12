@@ -1,4 +1,4 @@
-import type { UniversaBridgeState } from "universa-kit";
+import type { UniversalBridgeState } from "universal-bridge";
 
 import { BRIDGE_BASE_PATH } from "../overlay/constants.js";
 import {
@@ -48,8 +48,8 @@ function areStringArraysEqual(
 }
 
 function areBridgeStatesEqual(
-  a: UniversaBridgeState | null,
-  b: UniversaBridgeState | null,
+  a: UniversalBridgeState | null,
+  b: UniversalBridgeState | null,
 ): boolean {
   if (a === b) return true;
   if (!a || !b) return false;
@@ -110,7 +110,7 @@ function normalizeErrorMessage(error: unknown): string {
 
 function resolveBridgeTransportState(
   currentState: DashboardTransportState,
-  bridgeState: UniversaBridgeState,
+  bridgeState: UniversalBridgeState,
 ): DashboardTransportState {
   if (
     currentState === "runtime_starting" &&
@@ -214,7 +214,7 @@ export function createInitialDashboardLiveState(): DashboardLiveState {
 
 export function resolveDashboardLiveStateOnSuccess(
   prev: DashboardLiveState,
-  bridgeState: UniversaBridgeState,
+  bridgeState: UniversalBridgeState,
 ): DashboardLiveState {
   const now = Date.now();
   const nextTransportState = resolveBridgeTransportState(

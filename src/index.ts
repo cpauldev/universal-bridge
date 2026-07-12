@@ -1,46 +1,46 @@
 export {
-  createUniversaBridge,
-  UniversaBridge,
-  type UniversaBridgeOptions,
+  createUniversalBridge,
+  UniversalBridge,
+  type UniversalBridgeOptions,
 } from "./bridge/bridge.js";
 export {
-  UNIVERSA_PROTOCOL_VERSION,
-  UNIVERSA_WS_SUBPROTOCOL,
+  UNIVERSAL_PROTOCOL_VERSION,
+  UNIVERSAL_WS_SUBPROTOCOL,
 } from "./bridge/constants.js";
 export {
-  startStandaloneUniversaBridgeServer,
+  startStandaloneUniversalBridgeServer,
   type StandaloneBridgeServer,
 } from "./bridge/standalone.js";
 export {
-  createUniversaVitePlugin,
-  type UniversaVitePluginOptions,
+  createUniversalVitePlugin,
+  type UniversalVitePluginOptions,
 } from "./adapters/shared/plugin.js";
 export {
-  withUniversaNext,
-  type UniversaNextOptions,
+  withUniversalNext,
+  type UniversalNextOptions,
 } from "./adapters/framework/next.js";
 export {
-  createUniversaAstroIntegration,
-  type AstroUniversaOptions,
+  createUniversalAstroIntegration,
+  type AstroUniversalOptions,
 } from "./adapters/framework/astro.js";
 export {
-  createUniversaAngularCliProxyConfig,
-  startUniversaAngularCliBridge,
-  withUniversaAngularCliProxyConfig,
-  type AngularCliUniversaOptions,
-  type AngularCliUniversaProxyConfig,
+  createUniversalAngularCliProxyConfig,
+  startUniversalAngularCliBridge,
+  withUniversalAngularCliProxyConfig,
+  type AngularCliUniversalOptions,
+  type AngularCliUniversalProxyConfig,
   type AngularCliProxyTarget,
 } from "./adapters/framework/angular-cli.js";
 export {
-  createUniversaNuxtModule,
-  type UniversaNuxtOptions,
+  createUniversalNuxtModule,
+  type UniversalNuxtOptions,
 } from "./adapters/framework/nuxt.js";
 export {
-  attachUniversaToBunServe,
-  withUniversaBunServeFetch,
-  withUniversaBunServeWebSocketHandlers,
+  attachUniversalToBunServe,
+  withUniversalBunServeFetch,
+  withUniversalBunServeWebSocketHandlers,
   type BunBridgeHandle,
-  type BunUniversaOptions,
+  type BunUniversalOptions,
   type BunServeFetchHandler,
   type BunServeLikeServer,
   type BunServeLikeWebSocket,
@@ -48,48 +48,48 @@ export {
   type BunServeWebSocketHandlers,
 } from "./adapters/server/bun.js";
 export {
-  attachUniversaToNodeServer,
+  attachUniversalToNodeServer,
   createNodeBridgeLifecycle,
   type NodeBridgeHandle,
-  type NodeUniversaOptions,
+  type NodeUniversalOptions,
 } from "./adapters/server/node.js";
 export {
-  attachUniversaToFastify,
+  attachUniversalToFastify,
   type FastifyBridgeHandle,
-  type FastifyUniversaOptions,
+  type FastifyUniversalOptions,
   type FastifyLikeInstance,
   type FastifyLikeReply,
   type FastifyLikeRequest,
 } from "./adapters/server/fastify.js";
 export {
-  attachUniversaToHonoNodeServer,
+  attachUniversalToHonoNodeServer,
   createHonoBridgeLifecycle,
   type HonoBridgeHandle,
-  type HonoUniversaOptions,
+  type HonoUniversalOptions,
   type HonoNodeServer,
 } from "./adapters/server/hono.js";
 export {
   createWebpackBridgeLifecycle,
-  withUniversaWebpackDevServer,
+  withUniversalWebpackDevServer,
   type WebpackDevServerConfig,
   type WebpackDevServerLike,
-  type WebpackUniversaOptions,
+  type WebpackUniversalOptions,
   type WebpackLikeApp,
   type WebpackLikeHttpServer,
 } from "./adapters/build/webpack.js";
 export {
   createRsbuildBridgeLifecycle,
-  withUniversaRsbuild,
+  withUniversalRsbuild,
   type RsbuildConfig,
   type RsbuildDevServerLike,
-  type RsbuildUniversaOptions,
+  type RsbuildUniversalOptions,
 } from "./adapters/build/rsbuild.js";
 export {
   createRspackBridgeLifecycle,
-  withUniversaRspack,
+  withUniversalRspack,
   type RspackConfig,
   type RspackDevServerLike,
-  type RspackUniversaOptions,
+  type RspackUniversalOptions,
 } from "./adapters/build/rspack.js";
 export {
   RuntimeHelper,
@@ -97,13 +97,13 @@ export {
   type RuntimeControlSupport,
 } from "./runtime/runtime-helper.js";
 export {
-  UniversaClientError,
-  createUniversaClient,
-  type UniversaBridgeHealth,
-  type UniversaClient,
-  type UniversaClientOptions,
-  type UniversaEventsSubscriptionOptions,
-  type UniversaWebSocketLike,
+  UniversalClientError,
+  createUniversalClient,
+  type UniversalBridgeHealth,
+  type UniversalClient,
+  type UniversalClientOptions,
+  type UniversalEventsSubscriptionOptions,
+  type UniversalWebSocketLike,
 } from "./client/client.js";
 export {
   createClientRuntimeContext,
@@ -112,19 +112,19 @@ export {
   registerClientRuntimeContexts,
   resolveClientAutoMount,
   resolveClientRuntimeContext,
-  type UniversaClientRuntimeContext,
+  type UniversalClientRuntimeContext,
 } from "./client/runtime-context.js";
 export type {
-  UniversaBridgeCapabilities,
-  UniversaBridgeEvent,
-  UniversaBridgeInstance,
-  UniversaBridgeState,
-  UniversaCommandRequest,
-  UniversaCommandResult,
-  UniversaErrorCode,
-  UniversaErrorPayload,
-  UniversaErrorResponse,
-  UniversaProtocolVersion,
-  UniversaRuntimePhase,
-  UniversaRuntimeStatus,
+  UniversalBridgeCapabilities,
+  UniversalBridgeEvent,
+  UniversalBridgeInstance,
+  UniversalBridgeState,
+  UniversalCommandRequest,
+  UniversalCommandResult,
+  UniversalErrorCode,
+  UniversalErrorPayload,
+  UniversalErrorResponse,
+  UniversalProtocolVersion,
+  UniversalRuntimePhase,
+  UniversalRuntimeStatus,
 } from "./types.js";

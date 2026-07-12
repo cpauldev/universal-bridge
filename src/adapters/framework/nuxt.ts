@@ -2,14 +2,14 @@ import { isEventsUpgradePath } from "../../bridge/router.js";
 import {
   type BridgeLifecycle,
   type MiddlewareAdapterServer,
-  type UniversaAdapterOptions,
+  type UniversalAdapterOptions,
   appendPlugin,
   createBridgeLifecycle,
   resolveAdapterOptions,
 } from "../shared/adapter-utils.js";
 
-export type UniversaNuxtOptions = UniversaAdapterOptions;
-export type UniversaNuxtModule = ((
+export type UniversalNuxtOptions = UniversalAdapterOptions;
+export type UniversalNuxtModule = ((
   moduleOptions?: unknown,
   nuxt?: unknown,
 ) => void) & {
@@ -19,9 +19,9 @@ export type UniversaNuxtModule = ((
   };
 };
 
-export function createUniversaNuxtModule(
-  options: UniversaNuxtOptions = {},
-): UniversaNuxtModule {
+export function createUniversalNuxtModule(
+  options: UniversalNuxtOptions = {},
+): UniversalNuxtModule {
   const resolvedOptions = resolveAdapterOptions(options);
   const lifecycle = createBridgeLifecycle(resolvedOptions);
   let lastViteServer: MiddlewareAdapterServer | null = null;
@@ -38,7 +38,7 @@ export function createUniversaNuxtModule(
 
   const meta = {
     name: resolvedOptions.adapterName,
-    configKey: "universa",
+    configKey: "universal",
   };
 
   function hasPluginWithName(
@@ -82,22 +82,22 @@ export function createUniversaNuxtModule(
         event: "upgrade" | "close",
       ) => ((...args: unknown[]) => void)[];
       removeAllListeners: (event: "upgrade" | "close") => void;
-      __universaBridgeDispatcherInstalled?: boolean;
-      __universaBridgeCloseHookInstalled?: boolean;
-      __universaBridgeInitialUpgradeListeners?: ((
+      __universalBridgeDispatcherInstalled?: boolean;
+      __universalBridgeCloseHookInstalled?: boolean;
+      __universalBridgeInitialUpgradeListeners?: ((
         ...args: unknown[]
       ) => void)[];
-      __universaBridgeUpgradeSources?: Map<
+      __universalBridgeUpgradeSources?: Map<
         string,
         () => ReturnType<BridgeLifecycle["getBridge"]>
       >;
-      __universaBridgeTeardowns?: Map<string, () => Promise<void>>;
+      __universalBridgeTeardowns?: Map<string, () => Promise<void>>;
     }) => {
       const bridgePathPrefix =
-        resolvedOptions.bridgePathPrefix ?? "/__universa";
-      const upgradeSources = (listenerServer.__universaBridgeUpgradeSources ??=
+        resolvedOptions.bridgePathPrefix ?? "/__universal";
+      const upgradeSources = (listenerServer.__universalBridgeUpgradeSources ??=
         new Map());
-      const teardownHandlers = (listenerServer.__universaBridgeTeardowns ??=
+      const teardownHandlers = (listenerServer.__universalBridgeTeardowns ??=
         new Map());
 
       upgradeSources.set(bridgePathPrefix, () => lifecycle.getBridge());
@@ -107,9 +107,9 @@ export function createUniversaNuxtModule(
         void lifecycle.setup(lastViteServer);
       }
 
-      if (!listenerServer.__universaBridgeDispatcherInstalled) {
-        listenerServer.__universaBridgeDispatcherInstalled = true;
-        listenerServer.__universaBridgeInitialUpgradeListeners =
+      if (!listenerServer.__universalBridgeDispatcherInstalled) {
+        listenerServer.__universalBridgeDispatcherInstalled = true;
+        listenerServer.__universalBridgeInitialUpgradeListeners =
           listenerServer.listeners("upgrade");
         listenerServer.removeAllListeners("upgrade");
 
@@ -121,7 +121,7 @@ export function createUniversaNuxtModule(
           ];
           const requestPath = req.url || "/";
 
-          const sources = listenerServer.__universaBridgeUpgradeSources;
+          const sources = listenerServer.__universalBridgeUpgradeSources;
           if (sources) {
             for (const [prefix, getBridge] of sources.entries()) {
               if (!isEventsUpgradePath(requestPath, prefix)) continue;
@@ -135,18 +135,18 @@ export function createUniversaNuxtModule(
             }
           }
 
-          for (const listener of listenerServer.__universaBridgeInitialUpgradeListeners ??
+          for (const listener of listenerServer.__universalBridgeInitialUpgradeListeners ??
             []) {
             listener(req, socket, head);
           }
         });
       }
 
-      if (!listenerServer.__universaBridgeCloseHookInstalled) {
-        listenerServer.__universaBridgeCloseHookInstalled = true;
+      if (!listenerServer.__universalBridgeCloseHookInstalled) {
+        listenerServer.__universalBridgeCloseHookInstalled = true;
         listenerServer.on("close", () => {
           const teardowns = [
-            ...(listenerServer.__universaBridgeTeardowns?.values() ?? []),
+            ...(listenerServer.__universalBridgeTeardowns?.values() ?? []),
           ];
           void Promise.all(teardowns.map((teardown) => teardown()));
         });
@@ -154,5 +154,5 @@ export function createUniversaNuxtModule(
     }) as (...args: unknown[]) => void);
   }
 
-  return Object.assign(setup, { meta }) as UniversaNuxtModule;
+  return Object.assign(setup, { meta }) as UniversalNuxtModule;
 }

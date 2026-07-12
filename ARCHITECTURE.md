@@ -1,10 +1,10 @@
-# Universa Architecture
+# Universal Architecture
 
-This document explains how UniversaKit is structured internally and how requests move through the system.
+This document explains how UniversalBridge is structured internally and how requests move through the system.
 
 ## High-level model
 
-UniversaKit mounts a same-origin bridge (`/__universa/*`) onto a host dev server.
+UniversalBridge mounts a same-origin bridge (`/__universal/*`) onto a host dev server.
 That bridge provides:
 
 - runtime state and health routes
@@ -51,7 +51,7 @@ Optional runtime process management:
 
 Preset API for tool authors to expose one integration entrypoint.
 
-- normalizes identity -> namespace (`/__universa/<namespaceId>`)
+- normalizes identity -> namespace (`/__universal/<namespaceId>`)
 - computes effective adapter options (bridge prefix, adapter name, next bridge key)
 - composes framework adapters through registry mode while keeping imperative adapters local
 
@@ -84,5 +84,5 @@ Typed helper layer for browser/Node clients.
 - Query-safe route matching.
 - Deterministic bridge error envelope.
 - Binary request + multi-cookie proxy fidelity.
-- Websocket subprotocol validation (`universa.v1+json`).
+- Websocket subprotocol validation (`universal.v1+json`).
 - Next.js standalone singleton keying with optional deterministic override.

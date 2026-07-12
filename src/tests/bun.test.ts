@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
 
-import { attachUniversaToBunServe } from "../adapters/server/bun.js";
+import { attachUniversalToBunServe } from "../adapters/server/bun.js";
 
 describe("bun adapter", () => {
   it("proxies bridge routes and falls through for non-bridge routes", async () => {
-    const handle = await attachUniversaToBunServe({ autoStart: false });
+    const handle = await attachUniversalToBunServe({ autoStart: false });
     const server = {
       upgrade: () => false,
     };
@@ -20,7 +20,7 @@ describe("bun adapter", () => {
     expect(await appResponse?.text()).toBe("app");
 
     const healthResponse = await fetchHandler(
-      new Request("http://localhost:3000/__universa/health"),
+      new Request("http://localhost:3000/__universal/health"),
       server,
     );
     expect(healthResponse).toBeDefined();
@@ -33,7 +33,7 @@ describe("bun adapter", () => {
   });
 
   it("upgrades websocket requests for bridge events route", async () => {
-    const handle = await attachUniversaToBunServe({ autoStart: false });
+    const handle = await attachUniversalToBunServe({ autoStart: false });
     const upgrades: unknown[] = [];
     const server = {
       upgrade: (_request: Request, options?: { data?: unknown }) => {
@@ -46,7 +46,7 @@ describe("bun adapter", () => {
     });
 
     const upgradeResponse = await fetchHandler(
-      new Request("http://localhost:3000/__universa/events?source=ui", {
+      new Request("http://localhost:3000/__universal/events?source=ui", {
         headers: {
           upgrade: "websocket",
         },
@@ -57,17 +57,17 @@ describe("bun adapter", () => {
     expect(upgradeResponse).toBeUndefined();
     expect(upgrades.length).toBe(1);
     const upgradeData = upgrades[0] as {
-      __universa: { upstreamUrl: string };
+      __universal: { upstreamUrl: string };
     };
-    expect(upgradeData.__universa.upstreamUrl).toBe(
-      `${handle.baseUrl.replace("http://", "ws://")}/__universa/events?source=ui`,
+    expect(upgradeData.__universal.upstreamUrl).toBe(
+      `${handle.baseUrl.replace("http://", "ws://")}/__universal/events?source=ui`,
     );
 
     await handle.close();
   });
 
-  it("delegates websocket handlers for non-universa-kit sockets", async () => {
-    const handle = await attachUniversaToBunServe({ autoStart: false });
+  it("delegates websocket handlers for non-universal-bridge sockets", async () => {
+    const handle = await attachUniversalToBunServe({ autoStart: false });
     const calls = {
       open: 0,
       message: 0,

@@ -1,7 +1,7 @@
 import { WebSocket, WebSocketServer } from "ws";
 
-import type { UniversaBridgeEvent, UniversaRuntimeStatus } from "../types.js";
-import { UNIVERSA_PROTOCOL_VERSION } from "./constants.js";
+import type { UniversalBridgeEvent, UniversalRuntimeStatus } from "../types.js";
+import { UNIVERSAL_PROTOCOL_VERSION } from "./constants.js";
 
 interface EventClientState {
   isAlive: boolean;
@@ -21,14 +21,16 @@ export class BridgeEventBus {
     wss.on("connection", (socket) => this.registerEventClient(socket));
   }
 
-  createRuntimeStatusEvent(status: UniversaRuntimeStatus): UniversaBridgeEvent {
+  createRuntimeStatusEvent(
+    status: UniversalRuntimeStatus,
+  ): UniversalBridgeEvent {
     return this.createBridgeEvent({
       type: "runtime-status",
       status,
     });
   }
 
-  emitRuntimeStatus(status: UniversaRuntimeStatus): void {
+  emitRuntimeStatus(status: UniversalRuntimeStatus): void {
     this.emitEvent(this.createRuntimeStatusEvent(status));
   }
 
@@ -50,7 +52,7 @@ export class BridgeEventBus {
     this.stopHeartbeatLoop();
   }
 
-  private emitEvent(event: UniversaBridgeEvent): void {
+  private emitEvent(event: UniversalBridgeEvent): void {
     const payload = JSON.stringify(event);
     for (const client of this.#eventClients) {
       if (client.readyState === WebSocket.OPEN) {
@@ -63,16 +65,16 @@ export class BridgeEventBus {
     event:
       | {
           type: "runtime-status";
-          status: UniversaRuntimeStatus;
+          status: UniversalRuntimeStatus;
         }
       | {
           type: "runtime-error";
           error: string;
         },
-  ): UniversaBridgeEvent {
+  ): UniversalBridgeEvent {
     return {
       ...event,
-      protocolVersion: UNIVERSA_PROTOCOL_VERSION,
+      protocolVersion: UNIVERSAL_PROTOCOL_VERSION,
       eventId: this.#nextEventId++,
       timestamp: Date.now(),
     };

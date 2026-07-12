@@ -1,11 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "http";
 
 import {
-  type UniversaBridge,
-  createUniversaBridge,
+  type UniversalBridge,
+  createUniversalBridge,
 } from "../../bridge/bridge.js";
 import {
-  type UniversaAdapterOptions,
+  type UniversalAdapterOptions,
   resolveAdapterOptions,
 } from "../shared/adapter-utils.js";
 
@@ -35,22 +35,22 @@ export interface FastifyLikeInstance {
 }
 
 export interface FastifyBridgeHandle {
-  bridge: UniversaBridge;
+  bridge: UniversalBridge;
   close: () => Promise<void>;
 }
 
-export type FastifyUniversaOptions = UniversaAdapterOptions;
+export type FastifyUniversalOptions = UniversalAdapterOptions;
 
 function toError(value: unknown): Error {
   if (value instanceof Error) return value;
   return new Error(String(value));
 }
 
-export async function attachUniversaToFastify(
+export async function attachUniversalToFastify(
   fastify: FastifyLikeInstance,
-  options: FastifyUniversaOptions = {},
+  options: FastifyUniversalOptions = {},
 ): Promise<FastifyBridgeHandle> {
-  const bridge = await createUniversaBridge(resolveAdapterOptions(options));
+  const bridge = await createUniversalBridge(resolveAdapterOptions(options));
 
   fastify.addHook(
     "onRequest",

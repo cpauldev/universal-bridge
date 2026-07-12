@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it } from "bun:test";
 
 import {
-  UNIVERSA_NEXT_BRIDGE_GLOBAL_KEY,
-  type UniversaRewriteSpec,
+  UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY,
+  type UniversalRewriteSpec,
 } from "../adapters/shared/adapter-utils.js";
-import { createUniversaPreset } from "../preset.js";
+import { createUniversalPreset } from "../preset.js";
 
 type StandaloneBridgeLike = {
   baseUrl: string;
@@ -18,8 +18,8 @@ const bridgeGlobal = globalThis as typeof globalThis & {
 const registryGlobal = globalThis as typeof globalThis & {
   [key: symbol]: unknown;
 };
-const registrySymbol = Symbol.for("universa.preset.registry");
-const frameworkActivationSymbol = Symbol.for("universa.framework.activation");
+const registrySymbol = Symbol.for("universal.preset.registry");
+const frameworkActivationSymbol = Symbol.for("universal.framework.activation");
 const createdKeys = new Set<string>();
 
 function seedStandaloneBridge(key: string, baseUrl: string): void {
@@ -61,12 +61,12 @@ afterEach(async () => {
   await clearSeededStandaloneBridges();
   delete registryGlobal[registrySymbol];
   delete registryGlobal[frameworkActivationSymbol];
-  delete process.env.NEXT_PUBLIC_UNIVERSA_CLIENT_CONTEXTS;
+  delete process.env.NEXT_PUBLIC_UNIVERSAL_CLIENT_CONTEXTS;
 });
 
-describe("createUniversaPreset", () => {
+describe("createUniversalPreset", () => {
   it("exposes all adapter surfaces from one preset object", () => {
-    const preset = createUniversaPreset({
+    const preset = createUniversalPreset({
       identity: { packageName: "@tests/surfaces" },
     });
 
@@ -90,12 +90,12 @@ describe("createUniversaPreset", () => {
   });
 
   it("applies base options to next and angular-cli wrappers", async () => {
-    const nextBridgeKey = `${UNIVERSA_NEXT_BRIDGE_GLOBAL_KEY}:preset:next`;
-    const angularBridgeKey = `${UNIVERSA_NEXT_BRIDGE_GLOBAL_KEY}:preset:angular`;
+    const nextBridgeKey = `${UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY}:preset:next`;
+    const angularBridgeKey = `${UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY}:preset:angular`;
     seedStandaloneBridge(nextBridgeKey, "http://127.0.0.1:40101");
     seedStandaloneBridge(angularBridgeKey, "http://127.0.0.1:40102");
 
-    const preset = createUniversaPreset({
+    const preset = createUniversalPreset({
       identity: { packageName: "@tests/base-options" },
       unsafeOverrides: {
         nextBridgeGlobalKey: nextBridgeKey,
@@ -103,7 +103,7 @@ describe("createUniversaPreset", () => {
     });
 
     const wrappedNextConfig = preset.next({
-      rewrites: async (): Promise<UniversaRewriteSpec> => [],
+      rewrites: async (): Promise<UniversalRewriteSpec> => [],
     });
     const rewrites = await wrappedNextConfig.rewrites?.();
     if (!rewrites || Array.isArray(rewrites)) {
@@ -111,23 +111,23 @@ describe("createUniversaPreset", () => {
     }
 
     expect(rewrites.beforeFiles?.[0]).toEqual({
-      source: "/__universa/tests-base-options/:path*",
+      source: "/__universal/tests-base-options/:path*",
       destination:
-        "http://127.0.0.1:40101/__universa/tests-base-options/:path*",
+        "http://127.0.0.1:40101/__universal/tests-base-options/:path*",
     });
 
     const proxyConfig = await preset.angularCli.createProxyConfig({
       angularCliBridgeGlobalKey: angularBridgeKey,
     });
     expect(proxyConfig).toEqual({
-      "/__universa/tests-base-options": {
+      "/__universal/tests-base-options": {
         target: "http://127.0.0.1:40102",
         secure: false,
         changeOrigin: false,
         ws: true,
         logLevel: "warn",
       },
-      "/__universa/tests-base-options/**": {
+      "/__universal/tests-base-options/**": {
         target: "http://127.0.0.1:40102",
         secure: false,
         changeOrigin: false,
@@ -138,12 +138,12 @@ describe("createUniversaPreset", () => {
   });
 
   it("allows per-call option overrides on top of preset defaults", async () => {
-    const baseBridgeKey = `${UNIVERSA_NEXT_BRIDGE_GLOBAL_KEY}:preset:base`;
-    const overrideBridgeKey = `${UNIVERSA_NEXT_BRIDGE_GLOBAL_KEY}:preset:override`;
+    const baseBridgeKey = `${UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY}:preset:base`;
+    const overrideBridgeKey = `${UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY}:preset:override`;
     seedStandaloneBridge(baseBridgeKey, "http://127.0.0.1:40201");
     seedStandaloneBridge(overrideBridgeKey, "http://127.0.0.1:40202");
 
-    const preset = createUniversaPreset({
+    const preset = createUniversalPreset({
       identity: { packageName: "@tests/per-call" },
       unsafeOverrides: {
         nextBridgeGlobalKey: baseBridgeKey,
@@ -152,7 +152,7 @@ describe("createUniversaPreset", () => {
 
     const wrappedNextConfig = preset.next(
       {
-        rewrites: async (): Promise<UniversaRewriteSpec> => [],
+        rewrites: async (): Promise<UniversalRewriteSpec> => [],
       },
       {
         nextBridgeGlobalKey: overrideBridgeKey,
@@ -165,8 +165,8 @@ describe("createUniversaPreset", () => {
     }
 
     expect(rewrites.beforeFiles?.[0]).toEqual({
-      source: "/__universa/tests-per-call/:path*",
-      destination: "http://127.0.0.1:40202/__universa/tests-per-call/:path*",
+      source: "/__universal/tests-per-call/:path*",
+      destination: "http://127.0.0.1:40202/__universal/tests-per-call/:path*",
     });
   });
 });

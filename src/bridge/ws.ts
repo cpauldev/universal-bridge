@@ -2,8 +2,8 @@ import type { IncomingMessage } from "http";
 import type { Duplex } from "stream";
 import { WebSocket, WebSocketServer } from "ws";
 
-import type { UniversaRuntimeStatus } from "../types.js";
-import { UNIVERSA_WS_SUBPROTOCOL } from "./constants.js";
+import type { UniversalRuntimeStatus } from "../types.js";
+import { UNIVERSAL_WS_SUBPROTOCOL } from "./constants.js";
 import { rejectUpgrade } from "./errors.js";
 import type { BridgeEventBus } from "./events.js";
 import { getRequestedSubprotocols, isEventsUpgradePath } from "./router.js";
@@ -17,7 +17,7 @@ interface BridgeUpgradeContext {
   shouldProxyRuntimeWebSocket: () => boolean;
   ensureRuntimeStarted: () => Promise<unknown>;
   getRuntimeUrl: () => string | null;
-  getRuntimeStatus: () => UniversaRuntimeStatus;
+  getRuntimeStatus: () => UniversalRuntimeStatus;
 }
 
 export function handleBridgeUpgrade(
@@ -35,12 +35,12 @@ export function handleBridgeUpgrade(
   const requestedProtocols = getRequestedSubprotocols(req);
   if (
     requestedProtocols.length > 0 &&
-    !requestedProtocols.includes(UNIVERSA_WS_SUBPROTOCOL)
+    !requestedProtocols.includes(UNIVERSAL_WS_SUBPROTOCOL)
   ) {
     rejectUpgrade(
       socket,
       426,
-      `Unsupported WebSocket subprotocol. Include Sec-WebSocket-Protocol: ${UNIVERSA_WS_SUBPROTOCOL}.`,
+      `Unsupported WebSocket subprotocol. Include Sec-WebSocket-Protocol: ${UNIVERSAL_WS_SUBPROTOCOL}.`,
     );
     return;
   }

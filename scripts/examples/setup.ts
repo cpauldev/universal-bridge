@@ -59,7 +59,7 @@ async function main(): Promise<void> {
   );
 
   await step("Installing workspace dependencies", () => run("bun install"));
-  await step("Building universa-kit", () => run("bun run build"));
+  await step("Building universal-bridge", () => run("bun run build"));
   if (force) {
     await step("Re-linking workspace packages (--force)", () =>
       run("bun install --force"),

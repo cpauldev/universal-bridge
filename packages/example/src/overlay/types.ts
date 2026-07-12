@@ -1,4 +1,7 @@
-import type { UniversaBridgeState, UniversaRuntimeStatus } from "universa-kit";
+import type {
+  UniversalBridgeState,
+  UniversalRuntimeStatus,
+} from "universal-bridge";
 
 export type OverlaySeverity =
   | "success"
@@ -59,7 +62,7 @@ export interface OverlayState {
   loadingAction: string | null;
   errorMessage: string | null;
   lastSuccessAt: number | null;
-  bridgeState: UniversaBridgeState | null;
+  bridgeState: UniversalBridgeState | null;
   settings: OverlaySettings;
   fileTree: FileTreeNode[];
   fileFilter: string;
@@ -76,7 +79,7 @@ export type OverlayAction =
       type: "setTransportState";
       transportState: OverlayState["transportState"];
     }
-  | { type: "setBridgeState"; bridgeState: UniversaBridgeState | null }
+  | { type: "setBridgeState"; bridgeState: UniversalBridgeState | null }
   | { type: "setTab"; tab: OverlayTab }
   | { type: "setExpanded"; expanded: boolean }
   | { type: "setLoadingAction"; loadingAction: string | null }
@@ -107,4 +110,4 @@ export interface OverlayActionResult {
   message?: string;
 }
 
-export type { UniversaBridgeState, UniversaRuntimeStatus };
+export type { UniversalBridgeState, UniversalRuntimeStatus };

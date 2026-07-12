@@ -1,6 +1,6 @@
 import { normalizeBridgePathPrefix } from "../bridge/prefix.js";
 
-export interface UniversaClientRuntimeContext {
+export interface UniversalClientRuntimeContext {
   namespaceId: string;
   bridgePathPrefix: string;
   clientEnabled: boolean;
@@ -12,14 +12,14 @@ export interface UniversaClientRuntimeContext {
   enabledStorageKey: string;
 }
 
-const GLOBAL_CONTEXTS_KEY = "__UNIVERSA_CLIENT_RUNTIME_CONTEXTS__";
-const ENV_CONTEXTS_KEY = "__UNIVERSA_CLIENT_RUNTIME_CONTEXTS__";
-const NEXT_PUBLIC_ENV_CONTEXTS_KEY = "NEXT_PUBLIC_UNIVERSA_CLIENT_CONTEXTS";
-const GLOBAL_QUERY_KEY = "universaClient";
+const GLOBAL_CONTEXTS_KEY = "__UNIVERSAL_CLIENT_RUNTIME_CONTEXTS__";
+const ENV_CONTEXTS_KEY = "__UNIVERSAL_CLIENT_RUNTIME_CONTEXTS__";
+const NEXT_PUBLIC_ENV_CONTEXTS_KEY = "NEXT_PUBLIC_UNIVERSAL_CLIENT_CONTEXTS";
+const GLOBAL_QUERY_KEY = "universalClient";
 
-type ClientRuntimeContextMap = Record<string, UniversaClientRuntimeContext>;
+type ClientRuntimeContextMap = Record<string, UniversalClientRuntimeContext>;
 
-export interface UniversaClientRuntimeContextOptions {
+export interface UniversalClientRuntimeContextOptions {
   namespaceId: string;
   bridgePathPrefix?: string;
   clientEnabled?: boolean;
@@ -46,13 +46,13 @@ function normalizeNamespaceId(namespaceId: string): string {
 }
 
 export function createClientRuntimeContext(
-  options: UniversaClientRuntimeContextOptions,
-): UniversaClientRuntimeContext {
+  options: UniversalClientRuntimeContextOptions,
+): UniversalClientRuntimeContext {
   const namespaceId = normalizeNamespaceId(options.namespaceId);
   const bridgePathPrefix = normalizeBridgePathPrefix(
     options.bridgePathPrefix ?? namespaceId,
   );
-  const keyPrefix = `universa:client:${namespaceId}`;
+  const keyPrefix = `universal:client:${namespaceId}`;
 
   return {
     namespaceId,
@@ -60,8 +60,8 @@ export function createClientRuntimeContext(
     clientEnabled: options.clientEnabled ?? true,
     autoMount: options.autoMount ?? true,
     keyPrefix,
-    rootId: `universa-client-${namespaceId}`,
-    instanceKey: `__UNIVERSA_CLIENT_INSTANCE__:${namespaceId}`,
+    rootId: `universal-client-${namespaceId}`,
+    instanceKey: `__UNIVERSAL_CLIENT_INSTANCE__:${namespaceId}`,
     stateStorageKey: `${keyPrefix}:state`,
     enabledStorageKey: `${keyPrefix}:enabled`,
   };
@@ -166,7 +166,7 @@ function getScopedQueryKey(namespaceId: string): string {
 
 export function registerClientRuntimeContext(
   moduleSpecifier: string,
-  context: UniversaClientRuntimeContext,
+  context: UniversalClientRuntimeContext,
 ): void {
   if (!moduleSpecifier.trim()) return;
   const store = getGlobalContextStore();
@@ -192,7 +192,7 @@ export function getClientRuntimeContexts(): ClientRuntimeContextMap {
 
 export function resolveClientRuntimeContext(
   moduleSpecifier: string,
-): UniversaClientRuntimeContext | null {
+): UniversalClientRuntimeContext | null {
   if (!moduleSpecifier.trim()) return null;
 
   const globalContext = getGlobalContextStore()[moduleSpecifier];

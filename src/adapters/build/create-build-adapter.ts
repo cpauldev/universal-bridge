@@ -1,10 +1,10 @@
 import type {
   BridgeLifecycle,
-  UniversaAdapterOptions,
+  UniversalAdapterOptions,
 } from "../shared/adapter-utils.js";
 import {
   createSetupMiddlewaresBridgeLifecycle,
-  withUniversaSetupMiddlewares,
+  withUniversalSetupMiddlewares,
   type SetupMiddlewaresConfig,
   type SetupMiddlewaresDevServerLike,
 } from "./middleware-dev-server.js";
@@ -12,23 +12,23 @@ import {
 export type BuildToolDevServerLike = SetupMiddlewaresDevServerLike;
 export type BuildToolConfig<TMiddlewares extends unknown[] = unknown[]> =
   SetupMiddlewaresConfig<TMiddlewares, BuildToolDevServerLike>;
-export type BuildToolUniversaOptions = UniversaAdapterOptions;
+export type BuildToolUniversalOptions = UniversalAdapterOptions;
 
 export function createBuildToolBridgeLifecycle(
-  options: BuildToolUniversaOptions = {},
+  options: BuildToolUniversalOptions = {},
 ): BridgeLifecycle {
   return createSetupMiddlewaresBridgeLifecycle(options);
 }
 
-export function withUniversaBuildTool<
+export function withUniversalBuildTool<
   TMiddlewares extends unknown[],
   TDevServer extends BuildToolDevServerLike,
   TConfig extends SetupMiddlewaresConfig<TMiddlewares, TDevServer>,
 >(
   config: TConfig,
-  options: BuildToolUniversaOptions = {},
+  options: BuildToolUniversalOptions = {},
 ): TConfig & SetupMiddlewaresConfig<TMiddlewares, TDevServer> {
-  return withUniversaSetupMiddlewares<TMiddlewares, TDevServer, TConfig>(
+  return withUniversalSetupMiddlewares<TMiddlewares, TDevServer, TConfig>(
     config,
     options,
   );

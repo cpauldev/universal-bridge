@@ -1,8 +1,8 @@
 import type { StandaloneBridgeServer } from "../../bridge/standalone.js";
 import {
-  UNIVERSA_NEXT_BRIDGE_GLOBAL_KEY,
-  type UniversaAdapterOptions,
-  type UniversaRewriteSpec,
+  UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY,
+  type UniversalAdapterOptions,
+  type UniversalRewriteSpec,
   createBridgeRewriteRoute,
   createDirectRewriteRoute,
   ensureStandaloneBridgeSingleton,
@@ -12,9 +12,9 @@ import {
 
 type MaybePromise<T> = T | Promise<T>;
 
-export type UniversaNextOptions = UniversaAdapterOptions;
+export type UniversalNextOptions = UniversalAdapterOptions;
 
-const NEXT_BRIDGE_GLOBAL_KEY_PREFIX = `${UNIVERSA_NEXT_BRIDGE_GLOBAL_KEY}:next`;
+const NEXT_BRIDGE_GLOBAL_KEY_PREFIX = `${UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY}:next`;
 let nextBridgeInstanceCounter = 0;
 
 function createDefaultNextBridgeGlobalKey(): string {
@@ -23,14 +23,14 @@ function createDefaultNextBridgeGlobalKey(): string {
 }
 
 function ensureBridge(
-  options: UniversaNextOptions,
+  options: UniversalNextOptions,
 ): Promise<StandaloneBridgeServer> {
   return ensureStandaloneBridgeSingleton(options);
 }
 
-export function withUniversaNext<T extends object>(
+export function withUniversalNext<T extends object>(
   nextConfig: T,
-  options: UniversaNextOptions = {},
+  options: UniversalNextOptions = {},
 ): T {
   const isDev = process.env.NODE_ENV !== "production";
   if (!isDev) {
@@ -43,7 +43,7 @@ export function withUniversaNext<T extends object>(
     options.nextBridgeGlobalKey ?? createDefaultNextBridgeGlobalKey();
   const bridgeOptions = { ...resolvedOptions, nextBridgeGlobalKey };
   const next = { ...nextConfig } as T & {
-    rewrites?: () => MaybePromise<UniversaRewriteSpec>;
+    rewrites?: () => MaybePromise<UniversalRewriteSpec>;
   };
   const originalRewrites = next.rewrites;
 

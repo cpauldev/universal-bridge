@@ -28,7 +28,7 @@ coverage/
 .playwright-mcp/
 
 # Generated adapter bootstrap modules
-.universa-kit/
-**/.universa-kit/
-__universa-kit/
-**/__universa-kit/
+.universal-bridge/
+**/.universal-bridge/
+__universal-bridge/
+**/__universal-bridge/

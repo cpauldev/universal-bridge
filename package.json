@@ -87,6 +87,9 @@
     "dist",
     "assets",
     "README.md",
+    "CHANGELOG.md",
+    "INTEGRATION_GUIDE.md",
+    "EXAMPLE.md",
     "PROTOCOL.md",
     "ARCHITECTURE.md",
     "LICENSE"

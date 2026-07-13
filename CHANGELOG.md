@@ -7,13 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - 2026-07-12
 
-### Breaking
-
-- Upgraded the bridge protocol from v1 to v2. WebSocket clients that send `Sec-WebSocket-Protocol` must offer `universal.v2+json`; v1 is rejected.
-- Replaced `runtime-status` and `runtime-error` WebSocket events with `bridge-state` (a complete `UniversalBridgeState` snapshot) and `bridge-error`.
-- Added the required monotonic `revision` field to `UniversalBridgeState` for ordered state reconciliation.
-- Limited `/events` to typed bridge events; runtime WebSocket traffic must use a separate channel. Removed the obsolete `proxyRuntimeWebSocket` option.
-
 ### Added
 
 - `createBridgeRuntimeStore` for shared browser runtime state, lifecycle actions, event ordering, and refresh.
@@ -25,36 +18,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** Renamed the package from `universa-kit` to `universal-bridge`. Update installation commands, dependency declarations, and import specifiers.
+- **Breaking:** Renamed public APIs from the `Universa` prefix to `Universal` (for example, `createUniversalBridge` and `createUniversalVitePlugin`).
+- **Breaking:** Changed the default bridge prefix from `/__universa` to `/__universal`, including related runtime environment variable and fallback-command defaults.
+- **Breaking:** Upgraded the bridge protocol from v1 to v2. WebSocket clients that send `Sec-WebSocket-Protocol` must offer `universal.v2+json`; v1 is rejected.
+- **Breaking:** Replaced `runtime-status` and `runtime-error` events with `bridge-state` (a complete `UniversalBridgeState` snapshot) and `bridge-error`. `UniversalBridgeState` now includes a required monotonic `revision` field.
 - Reorganized framework hosts and the reference overlay under `example/`; the overlay now registers and auto-mounts itself through `universalOverlay()` configuration.
 - Refreshed example dashboard, file explorer, settings, and bridge-status presentation across framework examples.
+- Reframed the documentation around Universal Bridge as a protocol for local processes and refreshed the README and banner.
+
+### Removed
+
+- Runtime WebSocket proxying through `/events`, including the `proxyRuntimeWebSocket` option. Connect runtime WebSocket clients directly to their runtime channel.
 
 ### Fixed
 
+- Fixed Vite middleware registration after dev-server restarts.
 - Kept the selected file-tree row visually stable on hover and aligned bridge status badges across the examples.
 - Prevented duplicate Next browser-warning forwarding to the development terminal.
 - Prevented intentional runtime stops from being reported as runtime failures, and preserved binary Bun WebSocket payloads safely.
 
-## [0.3.0] - 2026-07-12
-
-### Changed
-
-- **Breaking:** Renamed the package from `universa-kit` to `universal-bridge`. Update installation commands, dependency declarations, and all import specifiers.
-- **Breaking:** Renamed public APIs from the `Universa` prefix to `Universal` (for example, `createUniversalBridge` and `createUniversalVitePlugin`).
-- **Breaking:** Changed the default control-plane prefix from `/__universa` to `/__universal`, along with related runtime environment variable and fallback-command defaults.
-- Reframed the documentation around Universal Bridge as a protocol for local services, refreshed the README, and replaced the banner with an optimized WebP asset.
-
-## [0.2.1] - 2026-07-07
-
-### Fixed
-
-- Vite plugin middleware registration after dev server restarts (Vite 5.0.4+ compatibility). The framework activation system now tracks which configuration has set up each specific server instance, preventing duplicate middleware registration and ensuring middleware is correctly applied after Vite restarts the dev server with a new server instance.
-
 ## [0.2.0] - 2026-03-17
-
-Removed client auto-mount functionality in favor of explicit client bootstrap imports. This is a breaking change for tool packages that relied on automatic injection.
 
 ### Added
 
+- `additionalRewriteSources` for proxying extra path prefixes directly to the runtime in Next.js.
+- `createDirectRewriteRoute` from `universa-kit/internal` for creating direct runtime rewrite rules.
 - Framework-aware client bootstrap injection that detects the active framework (SvelteKit, vinext, or generic) and selects the appropriate injection strategy.
 - Support for SvelteKit client entry module transformation via the Vite plugin `transform` hook.
 - Support for vinext virtual entry module transformation for client bootstrap injection.
@@ -64,7 +53,7 @@ Removed client auto-mount functionality in favor of explicit client bootstrap im
 
 ### Changed
 
-- **BREAKING:** Removed client auto-mount functionality. All examples now use explicit client bootstrap imports instead of automatic injection. Tool packages using `clientModule`/`autoMount` preset options must migrate to direct client imports.
+- **Breaking:** Removed client auto-mount functionality. All examples now use explicit client bootstrap imports instead of automatic injection. Tool packages using `clientModule`/`autoMount` preset options must migrate to direct client imports.
 - Refactored Vite plugin to use framework detection via `package.json` dependencies to determine the correct client injection strategy.
 - Updated Astro, Nuxt, and Vite adapters to use shared bootstrap assembly helpers for consistency.
 - Improved client bootstrap handling to avoid HTML injection for frameworks with their own client entry systems (SvelteKit, vinext).
@@ -97,6 +86,7 @@ Removed client auto-mount functionality in favor of explicit client bootstrap im
 
 - Improved release workflow with tag-based manual dispatch and deterministic behavior.
 - npm token fallback support in CI/CD pipeline.
+- Validated the automated release pipeline for subsequent releases.
 
 ## [0.1.0] - 2026-03-04
 
@@ -117,9 +107,7 @@ Initial release of `universa-kit`, a universal bridge for in-browser development
 - Eight framework examples (Next.js, Nuxt, Astro, SvelteKit, React, Vue, Solid, Vanilla) with shared UI components and example runner scripts.
 - Development overlay with React UI, Tailwind CSS, dashboard panels, file explorer, and metadata display.
 
-[0.4.0]: https://github.com/cpauldev/universal-bridge/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/cpauldev/universal-bridge/compare/v0.2.1...v0.3.0
-[0.2.1]: https://github.com/cpauldev/universal-bridge/compare/v0.2.0...v0.2.1
+[0.4.0]: https://github.com/cpauldev/universal-bridge/compare/v0.2.0...v0.4.0
 [0.2.0]: https://github.com/cpauldev/universal-bridge/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/cpauldev/universal-bridge/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/cpauldev/universal-bridge/compare/v0.1.0...v0.1.1

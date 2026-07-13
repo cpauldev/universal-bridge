@@ -1,6 +1,6 @@
 {
   "name": "universal-bridge",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A protocol for exposing and controlling local processes across frameworks and runtimes.",
   "type": "module",
   "main": "./dist/index.js",

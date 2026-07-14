@@ -1,8 +1,4 @@
 import {
-  type ViteClientEntryPlugin,
-  createUniversalClientEntryVitePlugin,
-} from "./adapters/client-entry.js";
-import {
   type RsbuildConfig,
   type RsbuildUniversalOptions,
   withUniversalRsbuild,
@@ -17,6 +13,10 @@ import {
   type WebpackUniversalOptions,
   withUniversalWebpackDevServer,
 } from "./adapters/build/webpack.js";
+import {
+  type ViteClientEntryPlugin,
+  createUniversalClientEntryVitePlugin,
+} from "./adapters/client-entry.js";
 import {
   type AngularCliUniversalOptions,
   type AngularCliUniversalProxyConfig,
@@ -41,6 +41,14 @@ import {
   type BunUniversalOptions,
   attachUniversalToBunServe,
 } from "./adapters/server/bun.js";
+import {
+  type ExpressBridgeHandle,
+  type ExpressLikeApp,
+  type ExpressUniversalMiddleware,
+  type ExpressUniversalOptions,
+  attachUniversalToExpress,
+  createUniversalExpressMiddleware,
+} from "./adapters/server/express.js";
 import {
   type FastifyBridgeHandle,
   type FastifyLikeInstance,
@@ -122,6 +130,15 @@ export interface UniversalPreset {
       fastify: FastifyLikeInstance,
       options?: FastifyUniversalOptions,
     ) => Promise<FastifyBridgeHandle>;
+  };
+  express: {
+    attach: (
+      app: ExpressLikeApp,
+      options?: ExpressUniversalOptions,
+    ) => Promise<ExpressBridgeHandle>;
+    middleware: (
+      options?: ExpressUniversalOptions,
+    ) => ExpressUniversalMiddleware;
   };
   hono: {
     attach: (
@@ -519,6 +536,12 @@ export function createUniversalPreset(
     fastify: {
       attach: (fastify, options = {}) =>
         attachUniversalToFastify(fastify, withLocalOptions(options)),
+    },
+    express: {
+      attach: (app, options = {}) =>
+        attachUniversalToExpress(app, withLocalOptions(options)),
+      middleware: (options = {}) =>
+        createUniversalExpressMiddleware(withLocalOptions(options)),
     },
     hono: {
       attach: (server, options = {}) =>

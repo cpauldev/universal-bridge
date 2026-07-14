@@ -83,6 +83,18 @@ describe("universal-bridge client", () => {
     expect(state.runtime.phase).toBe("stopped");
   });
 
+  it("constructs the stable runtime WebSocket gateway URL", () => {
+    const client = createUniversalClient({
+      baseUrl: "https://bridge.example.dev/app/",
+      namespaceId: "tests-client",
+    });
+    expect(
+      client.getRuntimeWebSocketUrl({ query: { session: "one", retry: 2 } }),
+    ).toBe(
+      "wss://bridge.example.dev/__universal/tests-client/runtime/ws?session=one&retry=2",
+    );
+  });
+
   it("controls runtime lifecycle through the typed client", async () => {
     const server = await startStandaloneUniversalBridgeServer({
       autoStart: false,
@@ -160,7 +172,8 @@ describe("universal-bridge client", () => {
     const runningEvent = await waitForEvent(
       events,
       (event) =>
-        event.type === "bridge-state" && event.state.runtime.phase === "running",
+        event.type === "bridge-state" &&
+        event.state.runtime.phase === "running",
     );
     expect(runningEvent.protocolVersion).toBe("2");
 

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-07-14
+
+### Added
+
+- Optional same-origin runtime WebSocket gateway at `/runtime/ws`, with binary frame, query-string, and runtime subprotocol forwarding.
+- `getRuntimeWebSocketUrl()` client helper, including query-string construction, and `hasRuntimeWebSocketGateway` capability reporting for gateway feature detection.
+- Express middleware and attachment APIs via `universal-bridge/express`, plus `preset.express.attach()` and `preset.express.middleware()`.
+- `createDockerComposeRuntime()` via `universal-bridge/docker` for composing Docker Compose-backed runtime command options.
+- React Router example host, shared example host metadata, and updated example runner/verification scripts.
+- Updated examples, fixtures, and smoke scripts to exercise the runtime WebSocket gateway in Vite and Next.js hosts.
+- Exported `RuntimeWebSocketGatewayOptions` for typed gateway configuration.
+
+### Changed
+
+- Kept `/events` bridge-protocol-only; runtime/app WebSocket traffic now belongs on the opt-in `/runtime/ws` gateway.
+- Split the example overlay into focused runtime and files panes, with dashboard section tests covering the shared section model.
+
+### Fixed
+
+- Hardened runtime WebSocket gateway lifecycle handling for paired socket closure, runtime restart, explicit stop/auto-start behavior, and Bun adapter payload typing.
+
 ## [0.4.1] - 2026-07-12
 
 ### Changed
@@ -113,6 +134,7 @@ Initial release of `universa-kit`, a universal bridge for in-browser development
 - Eight framework examples (Next.js, Nuxt, Astro, SvelteKit, React, Vue, Solid, Vanilla) with shared UI components and example runner scripts.
 - Development overlay with React UI, Tailwind CSS, dashboard panels, file explorer, and metadata display.
 
+[0.5.0]: https://github.com/cpauldev/universal-bridge/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/cpauldev/universal-bridge/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/cpauldev/universal-bridge/compare/v0.2.0...v0.4.0
 [0.2.0]: https://github.com/cpauldev/universal-bridge/compare/v0.1.2...v0.2.0

@@ -223,6 +223,17 @@ function createPanel(section: DashboardTableSection): HTMLElement {
   title.setAttribute("data-slot", "card-title");
   title.textContent = section.title;
 
+  const heading = document.createElement("div");
+  heading.className = "example-runtime-section-heading";
+  heading.appendChild(title);
+  if (section.description) {
+    const description = document.createElement("p");
+    description.className = "example-runtime-section-description";
+    description.setAttribute("data-slot", "card-description");
+    description.textContent = section.description;
+    heading.appendChild(description);
+  }
+
   const frame = createFrame();
   frame.setAttribute("data-runtime-frame", "true");
 
@@ -238,7 +249,7 @@ function createPanel(section: DashboardTableSection): HTMLElement {
   tableContainer.appendChild(table);
   frame.appendChild(tableContainer);
 
-  panel.append(title, frame);
+  panel.append(heading, frame);
   return panel;
 }
 
@@ -292,9 +303,7 @@ export function syncRuntimePanels(
 
   sections.forEach((section, index) => {
     const panel = panelById.get(section.id) ?? createPanel(section);
-    const title = panel.querySelector<HTMLElement>(
-      "[data-slot='card-title']",
-    );
+    const title = panel.querySelector<HTMLElement>("[data-slot='card-title']");
     if (title && title.textContent !== section.title) {
       title.textContent = section.title;
     }

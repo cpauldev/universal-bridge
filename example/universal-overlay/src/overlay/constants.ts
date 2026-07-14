@@ -4,17 +4,19 @@ import {
   resolveClientRuntimeContext,
 } from "universal-bridge/client-runtime";
 
+import {
+  OVERLAY_MODULE_SPECIFIER,
+  OVERLAY_PACKAGE_NAME,
+} from "../overlay-config.js";
 import type {
   OverlayPosition,
   OverlaySettings,
   TabDefinition,
 } from "./types.js";
 
-export const OVERLAY_MODULE_SPECIFIER = "@example/universal-overlay/overlay";
-
 function createFallbackRuntimeContext(): UniversalClientRuntimeContext {
   return createClientRuntimeContext({
-    namespaceId: "universal-overlay",
+    namespaceId: OVERLAY_PACKAGE_NAME,
   });
 }
 

@@ -31,7 +31,11 @@ describe("fastify adapter", () => {
     const fixture = createFastifyFixture();
     const handle = await attachUniversalToFastify(fixture.fastify, {
       autoStart: false,
+      runtimeWebSocketGateway: { path: "/ws" },
     });
+    expect(
+      handle.bridge.getState().capabilities.hasRuntimeWebSocketGateway,
+    ).toBe(false);
 
     const onRequest = fixture.getHook("onRequest");
     const onClose = fixture.getHook("onClose");

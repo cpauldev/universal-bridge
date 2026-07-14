@@ -1,3 +1,6 @@
+import { createRequire } from "module";
+import { join } from "path";
+
 import type { UniversalClientRuntimeContext } from "../client/runtime-context.js";
 
 export interface UniversalClientEntry {
@@ -13,7 +16,8 @@ export type ViteClientEntryPlugin = {
   name: string;
   enforce: "post";
   apply: "serve";
-  resolveId: (id: string) => string | null;
+  configResolved: (config: { root: string }) => void;
+  resolveId: (id: string) => string | null | undefined;
   load: (id: string) => string | null;
   transformIndexHtml: () => {
     tags: Array<{
@@ -35,6 +39,9 @@ const VIRTUAL_CLIENT_ENTRY_URL = "/@id/__x00__universal-bridge:client-entry";
 const SVELTEKIT_CLIENT_ENTRY =
   /[\\/]\.svelte-kit[\\/]generated[\\/]client[\\/]app\.js$/;
 const VINEXT_CLIENT_ENTRY = "virtual:vite-rsc/entry-browser";
+const REACT_ROUTER_DEFAULT_CLIENT_ENTRY =
+  /[\\/]@react-router[\\/]dev[\\/]dist[\\/]config[\\/]defaults[\\/]entry\.client\.tsx$/;
+const REACT_ROUTER_APP_CLIENT_ENTRY = /[\\/]app[\\/]entry\.client\.[jt]sx?$/;
 const ASTRO_PAGE_SCRIPT_QUERY = "?astro&type=script";
 const CLIENT_ENTRY_MARKER_PREFIX = "__UNIVERSAL_CLIENT_ENTRIES__:";
 
@@ -74,6 +81,8 @@ function isClientEntryTarget(id: string): boolean {
   return (
     SVELTEKIT_CLIENT_ENTRY.test(id) ||
     id.includes(VINEXT_CLIENT_ENTRY) ||
+    REACT_ROUTER_DEFAULT_CLIENT_ENTRY.test(id) ||
+    REACT_ROUTER_APP_CLIENT_ENTRY.test(id) ||
     id.includes(ASTRO_PAGE_SCRIPT_QUERY)
   );
 }
@@ -84,17 +93,31 @@ export function createUniversalClientEntryVitePlugin(
   if (entries.length === 0) return null;
 
   const bootstrap = createBootstrap(entries);
+  const entryModules = new Set(entries.map((entry) => entry.module));
+  let viteRoot = process.cwd();
+
+  function resolveClientEntryModule(id: string): string | undefined {
+    if (!entryModules.has(id)) return undefined;
+
+    try {
+      return createRequire(join(viteRoot, "package.json")).resolve(id);
+    } catch {
+      return undefined;
+    }
+  }
 
   return {
     name: "universal-bridge:client-entry",
     enforce: "post",
     apply: "serve",
+    configResolved(config) {
+      viteRoot = config.root;
+    },
     resolveId(id) {
-      return id === PUBLIC_VIRTUAL_CLIENT_ENTRY
-        ? VIRTUAL_CLIENT_ENTRY
-        : id === VIRTUAL_CLIENT_ENTRY
-          ? VIRTUAL_CLIENT_ENTRY
-          : null;
+      if (id === PUBLIC_VIRTUAL_CLIENT_ENTRY || id === VIRTUAL_CLIENT_ENTRY) {
+        return VIRTUAL_CLIENT_ENTRY;
+      }
+      return resolveClientEntryModule(id);
     },
     load(id) {
       return id === VIRTUAL_CLIENT_ENTRY ? bootstrap : null;

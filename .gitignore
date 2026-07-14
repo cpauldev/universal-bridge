@@ -5,10 +5,15 @@ dist/
 # Framework build outputs / caches
 .next/
 .nuxt/
+.vinext/
+**/.vinext/
+.react-router/
+**/.react-router/
 .svelte-kit/
 .astro/
 .vite/
 .output/
+build/
 .vercel/
 .netlify/
 
@@ -18,6 +23,10 @@ coverage/
 # Logs
 *.log
 .tmp-examples-run.lock
+
+# Python caches
+__pycache__/
+**/__pycache__/
 
 # Environment files
 .env*.local

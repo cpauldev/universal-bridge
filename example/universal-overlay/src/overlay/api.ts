@@ -1,4 +1,9 @@
-import { BRIDGE_BASE_PATH } from "./constants.js";
+import {
+  RUNTIME_FILES_PATH,
+  RUNTIME_OPEN_FILE_PATH,
+  runtimeFileMetadataPath,
+} from "../runtime/routes.js";
+import { bridgeRoute } from "./bridge-routes.js";
 import type {
   FileMetadata,
   FileTreeNode,
@@ -81,10 +86,6 @@ function asActionResult(payload: Record<string, unknown>): OverlayActionResult {
   };
 }
 
-function toRuntimeApiRoute(path: string): string {
-  return `${BRIDGE_BASE_PATH}/api${path}`;
-}
-
 export function createOverlayApi(baseUrl?: string): OverlayApi {
   const normalizedBaseUrl = resolveDevServerBaseUrl(baseUrl);
 
@@ -97,21 +98,20 @@ export function createOverlayApi(baseUrl?: string): OverlayApi {
       }
       const data = await request<Record<string, unknown>>(
         normalizedBaseUrl,
-        toRuntimeApiRoute(`/open-file?${params.toString()}`),
+        bridgeRoute(`${RUNTIME_OPEN_FILE_PATH}?${params.toString()}`),
       );
       return asActionResult(data);
     },
     async getFileTree() {
       return request<FileTreeNode[]>(
         normalizedBaseUrl,
-        toRuntimeApiRoute("/files"),
+        bridgeRoute(RUNTIME_FILES_PATH),
       );
     },
     async getFileMetadata(path: string) {
-      const encoded = encodeURIComponent(path);
       return request<FileMetadata>(
         normalizedBaseUrl,
-        toRuntimeApiRoute(`/files/${encoded}`),
+        bridgeRoute(runtimeFileMetadataPath(path)),
       );
     },
   };

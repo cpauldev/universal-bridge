@@ -73,6 +73,9 @@ export interface UniversalClient {
   startRuntime: () => Promise<UniversalRuntimeStatus>;
   restartRuntime: () => Promise<UniversalRuntimeStatus>;
   stopRuntime: () => Promise<UniversalRuntimeStatus>;
+  getRuntimeWebSocketUrl: (options?: {
+    query?: Record<string, string | number | boolean | undefined>;
+  }) => string;
   subscribeEvents: (
     listener: (event: UniversalBridgeEvent) => void,
     options?: UniversalEventsSubscriptionOptions,
@@ -239,6 +242,20 @@ export function createUniversalClient(
     startRuntime: () => requestRuntimeControl("/runtime/start"),
     restartRuntime: () => requestRuntimeControl("/runtime/restart"),
     stopRuntime: () => requestRuntimeControl("/runtime/stop"),
+    getRuntimeWebSocketUrl: (runtimeWebSocketOptions = {}) => {
+      const gatewayPath = joinPath(bridgePathPrefix, "/runtime/ws");
+      const webSocketUrl = resolveWebSocketUrl(options.baseUrl, gatewayPath);
+      const query = runtimeWebSocketOptions.query;
+      if (!query) return webSocketUrl;
+
+      const url = new URL(webSocketUrl);
+      for (const [key, value] of Object.entries(query)) {
+        if (typeof value !== "undefined") {
+          url.searchParams.set(key, String(value));
+        }
+      }
+      return url.toString();
+    },
     subscribeEvents: (
       listener: (event: UniversalBridgeEvent) => void,
       subscriptionOptions?: UniversalEventsSubscriptionOptions,

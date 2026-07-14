@@ -10,6 +10,13 @@ interface BridgeErrorOptions {
   details?: Record<string, unknown>;
 }
 
+interface RejectUpgradeOptions {
+  code?: UniversalErrorCode;
+  retryable?: boolean;
+  details?: Record<string, unknown>;
+  includeWsSubprotocol?: boolean;
+}
+
 export function writeBridgeError(
   res: ServerResponse,
   statusCode: number,
@@ -31,20 +38,31 @@ export function rejectUpgrade(
   socket: Duplex,
   statusCode: number,
   message: string,
+  options?: RejectUpgradeOptions,
 ): void {
   const payload = JSON.stringify({
     success: false,
     message,
     error: {
-      code: "invalid_request",
+      code: options?.code ?? "invalid_request",
       message,
-      retryable: false,
+      retryable: options?.retryable ?? false,
       details: {
-        wsSubprotocol: UNIVERSAL_WS_SUBPROTOCOL,
+        ...(options?.includeWsSubprotocol === false
+          ? {}
+          : { wsSubprotocol: UNIVERSAL_WS_SUBPROTOCOL }),
+        ...(options?.details ?? {}),
       },
     } satisfies UniversalErrorPayload,
   });
-  const reason = statusCode === 426 ? "Upgrade Required" : "Bad Request";
+  const reason =
+    statusCode === 426
+      ? "Upgrade Required"
+      : statusCode === 502
+        ? "Bad Gateway"
+        : statusCode === 503
+          ? "Service Unavailable"
+          : "Bad Request";
   const responseText =
     `HTTP/1.1 ${statusCode} ${reason}\r\n` +
     "Connection: close\r\n" +

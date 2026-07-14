@@ -73,7 +73,9 @@ async function main(): Promise<void> {
   console.log(`\nTo start all framework hosts:`);
   console.log(`  ${C.cyan}bun run example${C.reset}`);
   console.log(`\nTo start specific framework hosts:`);
-  console.log(`  ${C.cyan}bun run example react solid nextjs${C.reset}\n`);
+  console.log(
+    `  ${C.cyan}bun run example react react-router nextjs vue${C.reset}\n`,
+  );
 }
 
 await main().catch((error: unknown) => {

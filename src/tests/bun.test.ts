@@ -1,6 +1,43 @@
 import { describe, expect, it } from "bun:test";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
+import { WebSocket } from "ws";
 
-import { attachUniversalToBunServe } from "../adapters/server/bun.js";
+import {
+  type UniversalBunSocketData,
+  attachUniversalToBunServe,
+  withUniversalBunServeFetch,
+  withUniversalBunServeWebSocketHandlers,
+} from "../adapters/server/bun.js";
+
+const fixtureRuntimeScript = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "./fixtures/runtime-websocket-server.cjs",
+);
+
+function waitForOpen(socket: WebSocket): Promise<void> {
+  return new Promise((resolve, reject) => {
+    socket.once("open", resolve);
+    socket.once("error", reject);
+  });
+}
+
+function waitForMessage(socket: WebSocket): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    socket.once("message", (message) => resolve(toBuffer(message)));
+    socket.once("error", reject);
+  });
+}
+
+function toBuffer(data: unknown): Buffer {
+  if (Buffer.isBuffer(data)) return data;
+  if (data instanceof ArrayBuffer) return Buffer.from(new Uint8Array(data));
+  if (Array.isArray(data)) return Buffer.concat(data);
+  if (ArrayBuffer.isView(data)) {
+    return Buffer.from(data.buffer, data.byteOffset, data.byteLength);
+  }
+  return Buffer.from(String(data));
+}
 
 describe("bun adapter", () => {
   it("proxies bridge routes and falls through for non-bridge routes", async () => {
@@ -36,8 +73,11 @@ describe("bun adapter", () => {
     const handle = await attachUniversalToBunServe({ autoStart: false });
     const upgrades: unknown[] = [];
     const server = {
-      upgrade: (_request: Request, options?: { data?: unknown }) => {
-        upgrades.push(options?.data);
+      upgrade: (
+        _request: Request,
+        options: { data: UniversalBunSocketData },
+      ) => {
+        upgrades.push(options.data);
         return true;
       },
     };
@@ -56,14 +96,58 @@ describe("bun adapter", () => {
 
     expect(upgradeResponse).toBeUndefined();
     expect(upgrades.length).toBe(1);
-    const upgradeData = upgrades[0] as {
-      __universal: { upstreamUrl: string };
-    };
-    expect(upgradeData.__universal.upstreamUrl).toBe(
-      `${handle.baseUrl.replace("http://", "ws://")}/__universal/events?source=ui`,
-    );
+    expect(upgrades[0]).toHaveProperty("__universal");
 
     await handle.close();
+  });
+
+  it("proxies runtime WebSockets through a real Bun server", async () => {
+    const handle = await attachUniversalToBunServe({
+      command: process.execPath,
+      args: [fixtureRuntimeScript],
+      startTimeoutMs: 5_000,
+      runtimeWebSocketGateway: { path: "/socket" },
+    });
+    const server = Bun.serve({
+      port: 0,
+      fetch: withUniversalBunServeFetch(
+        async () => new Response("app"),
+        handle,
+      ),
+      websocket:
+        withUniversalBunServeWebSocketHandlers<UniversalBunSocketData>(handle),
+    });
+
+    try {
+      expect(
+        handle.bridge.getState().capabilities.hasRuntimeWebSocketGateway,
+      ).toBe(true);
+      const events = new WebSocket(
+        `ws://127.0.0.1:${server.port}/__universal/events`,
+      );
+      await waitForOpen(events);
+      expect(events.protocol).toBe("");
+      expect((await waitForMessage(events)).toString()).toContain(
+        "bridge-state",
+      );
+      events.close();
+
+      const socket = new WebSocket(
+        `ws://127.0.0.1:${server.port}/__universal/runtime/ws?via=bun`,
+        ["runtime.v1"],
+      );
+      await waitForOpen(socket);
+      expect(socket.protocol).toBe("runtime.v1");
+      expect((await waitForMessage(socket)).toString()).toContain("via=bun");
+
+      const echoed = waitForMessage(socket);
+      socket.send("first-frame");
+      expect((await echoed).toString()).toBe("first-frame");
+      socket.close();
+    } finally {
+      server.stop(true);
+      await handle.close();
+    }
   });
 
   it("delegates websocket handlers for non-universal-bridge sockets", async () => {

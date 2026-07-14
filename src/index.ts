@@ -6,6 +6,7 @@ export {
 export {
   createUniversalBridge,
   UniversalBridge,
+  type RuntimeWebSocketGatewayOptions,
   type UniversalBridgeOptions,
 } from "./bridge/bridge.js";
 export {
@@ -67,6 +68,15 @@ export {
   type FastifyLikeRequest,
 } from "./adapters/server/fastify.js";
 export {
+  attachUniversalToExpress,
+  createUniversalExpressMiddleware,
+  type ExpressBridgeHandle,
+  type ExpressLikeApp,
+  type ExpressNextFunction,
+  type ExpressUniversalMiddleware,
+  type ExpressUniversalOptions,
+} from "./adapters/server/express.js";
+export {
   attachUniversalToHonoNodeServer,
   createHonoBridgeLifecycle,
   type HonoBridgeHandle,
@@ -101,6 +111,11 @@ export {
   type RuntimeHelperOptions,
   type RuntimeControlSupport,
 } from "./runtime/runtime-helper.js";
+export {
+  createDockerComposeRuntime,
+  type DockerComposeRuntimeConfig,
+  type DockerComposeRuntimeOptions,
+} from "./runtime/docker.js";
 export {
   UniversalClientError,
   createUniversalClient,

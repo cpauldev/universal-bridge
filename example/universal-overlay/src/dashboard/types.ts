@@ -1,4 +1,12 @@
-import type { BridgeRuntimeSnapshot, UniversalBridgeState } from "universal-bridge";
+import type {
+  BridgeRuntimeSnapshot,
+  UniversalBridgeState,
+} from "universal-bridge";
+
+import type {
+  DashboardFrameworkDefinition,
+  DashboardFrameworkId,
+} from "../example-hosts.js";
 import type { FileMetadata, FileTreeNode } from "../overlay/types.js";
 
 export type DashboardTransportState =
@@ -32,12 +40,7 @@ export interface DashboardActionState {
 }
 
 export type DashboardBadgeVariant =
-  | "default"
-  | "success"
-  | "warning"
-  | "error"
-  | "info"
-  | "secondary";
+  "default" | "success" | "warning" | "error" | "info" | "secondary";
 
 export type DashboardTableCell =
   | {
@@ -72,37 +75,21 @@ export interface DashboardControlsSection {
 
 export interface DashboardTableSection {
   id:
-    | "bridge"
-    | "connection"
-    | "diagnostics"
-    | "runtime"
-    | "capabilities"
+    | "bridge-events"
+    | "bridge-state"
+    | "runtime-websocket"
+    | "runtime-control"
     | "settings"
     | "metadata";
   title: string;
+  description?: string;
   rows: DashboardTableRow[];
 }
 
 export type DashboardRuntimeSection =
-  | DashboardControlsSection
-  | DashboardTableSection;
+  DashboardControlsSection | DashboardTableSection;
 
-export type DashboardFrameworkId =
-  | "react"
-  | "vue"
-  | "sveltekit"
-  | "astro"
-  | "solid"
-  | "nextjs"
-  | "nuxt"
-  | "vanilla"
-  | "vinext";
-
-export interface DashboardFrameworkDefinition {
-  id: DashboardFrameworkId;
-  label: string;
-  defaultPort: number;
-}
+export type { DashboardFrameworkDefinition, DashboardFrameworkId };
 
 interface DashboardHealthInstance {
   id: string;

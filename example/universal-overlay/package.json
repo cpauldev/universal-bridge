@@ -8,19 +8,23 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./overlay.css": "./dist/overlay.css",
     "./overlay": {
       "types": "./dist/overlay/index.d.ts",
+      "import": "./dist/overlay/index.js",
       "default": "./dist/overlay/index.js"
     },
     "./dashboard": {
       "types": "./dist/dashboard/index.d.ts",
+      "import": "./dist/dashboard/index.js",
       "default": "./dist/dashboard/index.js"
     },
     "./runtime": {
       "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js",
       "default": "./dist/runtime/index.js"
     }
   },

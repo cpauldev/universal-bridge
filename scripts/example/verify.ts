@@ -7,29 +7,15 @@
  * Usage: bun scripts/example/verify.ts [name ...]
  *   e.g. bun scripts/example/verify.ts react nuxt
  */
+import { DASHBOARD_FRAMEWORKS } from "../../example/universal-overlay/src/example-hosts.js";
+import { OVERLAY_BRIDGE_PATH_PREFIX } from "../../example/universal-overlay/src/overlay-config.js";
 
-const PORT_RANGE_START = 4600;
-const OVERLAY_BRIDGE_NAMESPACE = "universal-overlay";
-const OVERLAY_BRIDGE_PREFIX = `/__universal/${OVERLAY_BRIDGE_NAMESPACE}`;
-
-const EXAMPLE_IDS = [
-  "react",
-  "vue",
-  "sveltekit",
-  "solid",
-  "astro",
-  "nextjs",
-  "nuxt",
-  "vanilla",
-  "vinext",
-] as const;
-
-const EXAMPLES: { name: string; defaultUrl: string }[] = EXAMPLE_IDS.map(
-  (name, index) => ({
-    name,
-    defaultUrl: `http://localhost:${PORT_RANGE_START + index}`,
-  }),
-);
+const EXAMPLES = DASHBOARD_FRAMEWORKS.map((framework) => ({
+  id: framework.id,
+  name: framework.label,
+  defaultUrl: `http://localhost:${framework.defaultPort}`,
+}));
+const EXAMPLE_LABEL_WIDTH = 14;
 
 const COLORS = {
   reset: "\x1b[0m",
@@ -80,7 +66,7 @@ async function verifyExample(
 
   // Check 1: /__universal/<namespace>/health
   const health = await checkEndpoint(
-    `${baseUrl}${OVERLAY_BRIDGE_PREFIX}/health`,
+    `${baseUrl}${OVERLAY_BRIDGE_PATH_PREFIX}/health`,
   );
   if (!health.ok) {
     pass = false;
@@ -96,7 +82,9 @@ async function verifyExample(
   }
 
   // Check 2: /__universal/<namespace>/state
-  const state = await checkEndpoint(`${baseUrl}${OVERLAY_BRIDGE_PREFIX}/state`);
+  const state = await checkEndpoint(
+    `${baseUrl}${OVERLAY_BRIDGE_PATH_PREFIX}/state`,
+  );
   if (!state.ok) {
     pass = false;
     details.push(`FAIL state: ${state.error ?? `HTTP ${state.status}`}`);
@@ -116,22 +104,25 @@ async function verifyExample(
 }
 
 async function main() {
-  const argv = process.argv.slice(2).map((a) => a.toLowerCase());
+  const argv = process.argv.slice(2).map((arg) => arg.toLowerCase());
   const selected =
-    argv.length > 0 ? EXAMPLES.filter((e) => argv.includes(e.name)) : EXAMPLES;
+    argv.length > 0
+      ? EXAMPLES.filter((example) => argv.includes(example.id))
+      : EXAMPLES;
 
   if (selected.length === 0) {
     console.error(
-      `${COLORS.red}No matching framework hosts. Available: ${EXAMPLES.map((e) => e.name).join(", ")}${COLORS.reset}`,
+      `${COLORS.red}No matching framework hosts. Available: ${EXAMPLES.map((example) => example.id).join(", ")}${COLORS.reset}`,
     );
     process.exit(1);
   }
 
-  log(`${COLORS.bright}${COLORS.cyan}Verifying ${selected.length} example bridge${selected.length > 1 ? "s" : ""}...${COLORS.reset}
-`);
+  log(
+    `${COLORS.cyan}Verifying ${selected.length} example bridge${selected.length > 1 ? "s" : ""}...${COLORS.reset}\n`,
+  );
 
   const results = await Promise.all(
-    selected.map((e) => verifyExample(e.name, e.defaultUrl)),
+    selected.map((example) => verifyExample(example.name, example.defaultUrl)),
   );
 
   let allPass = true;
@@ -139,7 +130,7 @@ async function main() {
     const icon = result.pass
       ? `${COLORS.green}✓${COLORS.reset}`
       : `${COLORS.red}✗${COLORS.reset}`;
-    log(`${icon} ${result.name.padEnd(12)} ${result.url}`);
+    log(`${icon} ${result.name.padEnd(EXAMPLE_LABEL_WIDTH)} ${result.url}`);
     if (!result.pass) {
       allPass = false;
       for (const detail of result.details) {
@@ -160,11 +151,11 @@ async function main() {
   log("");
   if (allPass) {
     log(
-      `${COLORS.green}${COLORS.bright}All ${passCount} bridge${passCount > 1 ? "s" : ""} healthy.${COLORS.reset}`,
+      `${COLORS.green}All ${passCount} bridge${passCount > 1 ? "s" : ""} healthy.${COLORS.reset}`,
     );
   } else {
     log(
-      `${COLORS.red}${COLORS.bright}${failCount} of ${results.length} failed.${COLORS.reset}`,
+      `${COLORS.red}${failCount} of ${results.length} failed.${COLORS.reset}`,
     );
     process.exit(1);
   }

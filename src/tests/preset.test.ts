@@ -4,8 +4,8 @@ import {
   UNIVERSAL_NEXT_BRIDGE_GLOBAL_KEY,
   type UniversalRewriteSpec,
 } from "../adapters/shared/adapter-utils.js";
-import { createUniversalPreset } from "../preset.js";
 import { getUniversalRegisteredPresets } from "../preset-registry.js";
+import { createUniversalPreset } from "../preset.js";
 
 type StandaloneBridgeLike = {
   baseUrl: string;
@@ -81,6 +81,8 @@ describe("createUniversalPreset", () => {
 
     expect(typeof preset.bun.attach).toBe("function");
     expect(typeof preset.node.attach).toBe("function");
+    expect(typeof preset.express.attach).toBe("function");
+    expect(typeof preset.express.middleware).toBe("function");
     expect(typeof preset.fastify.attach).toBe("function");
     expect(typeof preset.hono.attach).toBe("function");
 
@@ -183,9 +185,7 @@ describe("createUniversalPreset", () => {
     const preset = createUniversalPreset({
       identity: { packageName: "@tests/client-two" },
       client: {
-        entries: [
-          { module: "@tests/other-client-entry" },
-        ],
+        entries: [{ module: "@tests/other-client-entry" }],
       },
     });
 
@@ -218,8 +218,6 @@ describe("createUniversalPreset", () => {
       client: { entries: [{ module: "@tests/client-entry" }] },
     });
 
-    expect(() => preset.vite()).toThrow(
-      "registered for multiple namespaces",
-    );
+    expect(() => preset.vite()).toThrow("registered for multiple namespaces");
   });
 });

@@ -6,12 +6,19 @@ import { platform } from "os";
 import { delimiter, dirname, join } from "path";
 import { fileURLToPath } from "url";
 
+import {
+  DASHBOARD_FRAMEWORKS,
+  type DashboardFrameworkId,
+  EXAMPLE_PORT_RANGE_START,
+  getFrameworkDefaultPort,
+} from "../../example/universal-overlay/src/example-hosts.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT_DIR = join(__dirname, "../..");
-const PORT_RANGE_START = 4600;
 const PORT_CLEANUP_SPAN = 20;
 const OUTPUT_TAIL_LINES = 25;
+const EXAMPLE_LABEL_WIDTH = 14;
 const READY_MARKERS = [
   "ready",
   "http://localhost",
@@ -27,7 +34,7 @@ const NEXT_DEV_LOCK_PATHS = [
 ];
 
 interface ExampleDefinition {
-  id: string;
+  id: DashboardFrameworkId;
   name: string;
   dir: string;
   env?: Record<string, string>;
@@ -49,78 +56,36 @@ interface RuntimeExample extends ExampleDefinition {
 }
 
 // Fixed port registry — each framework owns a stable, predictable port.
-// Using PORT_RANGE_START + 1 so port 4600 remains free for the bridge manager.
-const EXAMPLE_PORTS: Record<string, number> = {
-  react: PORT_RANGE_START + 1,
-  vue: PORT_RANGE_START + 2,
-  sveltekit: PORT_RANGE_START + 3,
-  solid: PORT_RANGE_START + 4,
-  astro: PORT_RANGE_START + 5,
-  nextjs: PORT_RANGE_START + 6,
-  nuxt: PORT_RANGE_START + 7,
-  vanilla: PORT_RANGE_START + 8,
-  vinext: PORT_RANGE_START + 9,
-};
+// Port 4600 remains free for the bridge manager.
+const PORT_RANGE_START = EXAMPLE_PORT_RANGE_START;
 
 const STRICT_PORT_ARGS = ["--strictPort"];
 
-const EXAMPLES: ExampleDefinition[] = [
-  {
-    id: "react",
-    name: "React",
-    dir: "react",
-    devArgs: STRICT_PORT_ARGS,
-  },
-  {
-    id: "vue",
-    name: "Vue",
-    dir: "vue",
-    devArgs: STRICT_PORT_ARGS,
-  },
-  {
-    id: "sveltekit",
-    name: "SvelteKit",
-    dir: "sveltekit",
-    devArgs: STRICT_PORT_ARGS,
-  },
-  {
-    id: "solid",
-    name: "Solid",
-    dir: "solid",
-    devArgs: STRICT_PORT_ARGS,
-  },
-  {
-    id: "astro",
-    name: "Astro",
-    dir: "astro",
-  },
-  {
-    id: "nextjs",
-    name: "Next.js",
-    dir: "nextjs",
-  },
-  {
-    id: "nuxt",
-    name: "Nuxt",
-    dir: "nuxt",
-    // Nuxt fork mode restarts the worker on unhandled ECONNRESET in dev.
-    // Non-fork mode keeps the server stable in multi-example runs.
-    devArgs: ["--no-fork"],
-  },
-  {
-    id: "vanilla",
-    name: "Vanilla",
-    dir: "vanilla",
-    devArgs: STRICT_PORT_ARGS,
-  },
-  {
-    id: "vinext",
-    name: "Vinext",
-    dir: "vinext",
-    // RSC request handler registers after Vite's socket is ready; poll to confirm.
-    confirmUrl: true,
-  },
-];
+const EXAMPLE_OVERRIDES: Partial<
+  Record<
+    DashboardFrameworkId,
+    Pick<ExampleDefinition, "devArgs" | "confirmUrl">
+  >
+> = {
+  react: { devArgs: STRICT_PORT_ARGS },
+  "react-router": { devArgs: STRICT_PORT_ARGS, confirmUrl: true },
+  vue: { devArgs: STRICT_PORT_ARGS },
+  // Nuxt fork mode restarts the worker on unhandled ECONNRESET in dev.
+  // Non-fork mode keeps the server stable in multi-example runs.
+  nuxt: { devArgs: ["--no-fork"] },
+  sveltekit: { devArgs: STRICT_PORT_ARGS },
+  solid: { devArgs: STRICT_PORT_ARGS },
+  vanilla: { devArgs: STRICT_PORT_ARGS },
+  // RSC request handler registers after Vite's socket is ready; poll to confirm.
+  vinext: { confirmUrl: true },
+};
+
+const EXAMPLES: ExampleDefinition[] = DASHBOARD_FRAMEWORKS.map((framework) => ({
+  id: framework.id,
+  name: framework.label,
+  dir: framework.id,
+  ...EXAMPLE_OVERRIDES[framework.id],
+}));
 
 const runningProcesses: ChildProcess[] = [];
 
@@ -287,8 +252,8 @@ function stopExistingPortOwners(hosts: ExampleDefinition[]): void {
   const ownersByPid = new Map<number, string[]>();
   const namesByPort = new Map(
     hosts.map((example) => [
-      EXAMPLE_PORTS[example.id],
-      `${example.name} port ${EXAMPLE_PORTS[example.id]}`,
+      getFrameworkDefaultPort(example.id),
+      `${example.name} port ${getFrameworkDefaultPort(example.id)}`,
     ]),
   );
 
@@ -320,7 +285,8 @@ function waitForPortsAvailable(
   while (Date.now() < deadline) {
     if (
       hosts.every(
-        (example) => getPortOwners(EXAMPLE_PORTS[example.id]).length === 0,
+        (example) =>
+          getPortOwners(getFrameworkDefaultPort(example.id)).length === 0,
       )
     )
       return;
@@ -330,12 +296,12 @@ function waitForPortsAvailable(
   const busy = hosts
     .map((example) => ({
       example,
-      owners: getPortOwners(EXAMPLE_PORTS[example.id]),
+      owners: getPortOwners(getFrameworkDefaultPort(example.id)),
     }))
     .filter(({ owners }) => owners.length > 0)
     .map(
       ({ example, owners }) =>
-        `${example.name} port ${EXAMPLE_PORTS[example.id]} (pid ${owners.join(", ")})`,
+        `${example.name} port ${getFrameworkDefaultPort(example.id)} (pid ${owners.join(", ")})`,
     );
   if (busy.length > 0)
     throw new Error(`Could not free host ports: ${busy.join("; ")}.`);
@@ -387,17 +353,13 @@ function resolveExampleDevScript(
   ) as ExamplePackageManifest;
   const script = manifest.scripts?.dev?.trim();
   if (!script)
-    throw new Error(
-      `Missing "dev" script for ${exampleName} (${exampleDir})`,
-    );
+    throw new Error(`Missing "dev" script for ${exampleName} (${exampleDir})`);
   return script;
 }
 
 function toRuntimeExample(definition: ExampleDefinition): RuntimeExample {
   const cwd = join(ROOT_DIR, "example", definition.dir);
-  const port = EXAMPLE_PORTS[definition.id];
-  if (port === undefined)
-    throw new Error(`No port assigned for example "${definition.id}".`);
+  const port = getFrameworkDefaultPort(definition.id);
   const launchCommand = [
     resolveExampleDevScript(cwd, definition.name),
     ...["--port", String(port), ...(definition.devArgs ?? [])].map(shellEscape),
@@ -448,19 +410,24 @@ function printUsageAndExit() {
   );
   log("Usage:", COLORS.bright);
   log("  bun run example                     # Run all framework hosts");
-  log("  bun run example react nextjs        # Run specific framework hosts");
+  log("  bun run example react react-router  # Run specific framework hosts");
   log(
-    "  bun run example --no-open           # Run without opening browser tabs\n",
+    "  bun run example --no-open           # Run without opening browser tabs",
+  );
+  log(
+    "  bun run example --verify            # Verify bridge health after startup",
   );
   process.exit(1);
 }
 
 function parseArguments(argv: string[]): {
   openBrowser: boolean;
+  verifyAfterStart: boolean;
   selectedExamples: ExampleDefinition[];
 } {
   const args = [...argv];
   let openBrowser = true;
+  let verifyAfterStart = false;
 
   const noOpenIndex = args.indexOf("--no-open");
   if (noOpenIndex !== -1) {
@@ -468,8 +435,14 @@ function parseArguments(argv: string[]): {
     args.splice(noOpenIndex, 1);
   }
 
+  const verifyIndex = args.indexOf("--verify");
+  if (verifyIndex !== -1) {
+    verifyAfterStart = true;
+    args.splice(verifyIndex, 1);
+  }
+
   if (args.length === 0) {
-    return { openBrowser, selectedExamples: EXAMPLES };
+    return { openBrowser, verifyAfterStart, selectedExamples: EXAMPLES };
   }
 
   const requestedIds = args.map((arg) => arg.toLowerCase());
@@ -481,7 +454,7 @@ function parseArguments(argv: string[]): {
     printUsageAndExit();
   }
 
-  return { openBrowser, selectedExamples };
+  return { openBrowser, verifyAfterStart, selectedExamples };
 }
 
 function cleanupAndExit(code = 0) {
@@ -497,12 +470,18 @@ function startExample(
   example: RuntimeExample,
   index: number,
   openBrowser = true,
-) {
+): Promise<void> {
   const color = EXAMPLE_COLORS[index % EXAMPLE_COLORS.length];
   const url = `http://localhost:${example.port}`;
   const outputTail: string[] = [];
   clearNextDevLocks(example);
   let hasShownReady = false;
+  let resolveReady: () => void;
+  let rejectReady: (error: Error) => void;
+  const readyPromise = new Promise<void>((resolve, reject) => {
+    resolveReady = resolve;
+    rejectReady = reject;
+  });
 
   const childProcess = spawn(example.command, example.args, {
     cwd: example.cwd,
@@ -526,9 +505,10 @@ function startExample(
         await pollUntilServing(url);
       }
       log(
-        `${COLORS.green}✓${COLORS.reset} ${example.name.padEnd(12)} ${COLORS.bright}${url}${COLORS.reset}`,
+        `${COLORS.green}✓${COLORS.reset} ${example.name.padEnd(EXAMPLE_LABEL_WIDTH)} ${url}`,
       );
       if (openBrowser) openInBrowser(url);
+      resolveReady();
     }
 
     if (includesAny(output, ISSUE_MARKERS)) {
@@ -551,6 +531,7 @@ function startExample(
       `${COLORS.red}✗${COLORS.reset} ${example.name} failed: ${error.message}`,
       COLORS.red,
     );
+    rejectReady(error);
   });
 
   childProcess.on("close", (code) => {
@@ -566,33 +547,70 @@ function startExample(
         );
       }
     }
+    if (!hasShownReady) {
+      rejectReady(
+        new Error(`${example.name} exited before reporting readiness`),
+      );
+    }
   });
+
+  return readyPromise;
 }
 
-function main() {
-  const { openBrowser, selectedExamples } = parseArguments(
+async function runExampleVerification(
+  selectedExamples: ExampleDefinition[],
+): Promise<void> {
+  log("");
+  const childProcess = spawn(
+    "bun",
+    [
+      "scripts/example/verify.ts",
+      ...selectedExamples.map((example) => example.id),
+    ],
+    {
+      cwd: ROOT_DIR,
+      stdio: "inherit",
+      env: process.env,
+    },
+  );
+  const exitCode = await new Promise<number>((resolve) => {
+    childProcess.on("close", (code) => resolve(code ?? 1));
+    childProcess.on("error", () => resolve(1));
+  });
+  if (exitCode !== 0) {
+    throw new Error(`Bridge verification failed with exit code ${exitCode}`);
+  }
+}
+
+async function main() {
+  const { openBrowser, verifyAfterStart, selectedExamples } = parseArguments(
     process.argv.slice(2),
   );
   process.on("SIGINT", () => cleanupAndExit(0));
   process.on("SIGTERM", () => cleanupAndExit(0));
 
   log(
-    `${COLORS.bright}Starting ${selectedExamples.length} example${selectedExamples.length > 1 ? "s" : ""}...${COLORS.reset}`,
+    `Starting ${selectedExamples.length} example${selectedExamples.length > 1 ? "s" : ""}...`,
     COLORS.cyan,
   );
-  log(`${COLORS.yellow}Press Ctrl+C to stop all servers${COLORS.reset}\n`);
+  log(`Press Ctrl+C to stop all servers\n`, COLORS.yellow);
 
   stopExistingPortOwners(selectedExamples);
   waitForPortsAvailable(selectedExamples);
 
   const runtimeExamples = resolveRuntimeExamples(selectedExamples);
-  runtimeExamples.forEach((example, index) => {
-    startExample(example, index, openBrowser);
-  });
+  const readyPromises = runtimeExamples.map((example, index) =>
+    startExample(example, index, openBrowser),
+  );
+
+  if (verifyAfterStart) {
+    await Promise.all(readyPromises);
+    await runExampleVerification(selectedExamples);
+  }
 }
 
 try {
-  main();
+  await main();
 } catch (error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
   log(

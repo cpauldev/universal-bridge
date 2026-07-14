@@ -12,6 +12,7 @@ export function createCapabilities(
   fallbackCommand: string,
   hasRuntimeControl: boolean,
   commandHost: UniversalBridgeCapabilities["commandHost"],
+  hasRuntimeWebSocketGateway: boolean,
 ): UniversalBridgeCapabilities {
   return {
     commandHost,
@@ -19,6 +20,7 @@ export function createCapabilities(
     canStartRuntime: hasRuntimeControl,
     canRestartRuntime: hasRuntimeControl,
     canStopRuntime: hasRuntimeControl,
+    hasRuntimeWebSocketGateway,
     fallbackCommand,
     wsSubprotocol: UNIVERSAL_WS_SUBPROTOCOL,
     supportedProtocolVersions: [UNIVERSAL_PROTOCOL_VERSION],

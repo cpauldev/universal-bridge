@@ -94,8 +94,7 @@
 @theme {
   --font-sans:
     "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono:
     "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
@@ -386,8 +385,7 @@
 [data-overlay-root="true"] {
   font-family:
     "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
-    "Noto Color Emoji";
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   font-feature-settings: "cv11", "cv13";
   font-variation-settings: "opsz" 24;
   text-rendering: optimizeLegibility;
@@ -748,19 +746,26 @@
 }
 
 .overlay-runtime-columns {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 16px;
+  column-count: 2;
+  column-gap: 16px;
 }
 
 .overlay-runtime-column {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex: 0 0 calc(50% - 8px);
-  max-width: calc(50% - 8px);
+  break-inside: avoid;
+  margin-block-end: 16px;
   min-width: 0;
+}
+
+.overlay-runtime-section-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.overlay-runtime-section-heading p {
+  margin: 0;
 }
 
 .overlay-actions {

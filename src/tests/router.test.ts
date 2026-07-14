@@ -1,6 +1,10 @@
 import { describe, expect, it } from "bun:test";
 
-import { createRouteKey, matchBridgeRoute } from "../bridge/router.js";
+import {
+  createRouteKey,
+  isBridgeWebSocketUpgradePath,
+  matchBridgeRoute,
+} from "../bridge/router.js";
 
 function createRequest(
   method: string,
@@ -74,5 +78,26 @@ describe("bridge router", () => {
       "/__universal",
     );
     expect(match).toBeNull();
+  });
+
+  it("recognizes both bridge WebSocket upgrade routes", () => {
+    expect(
+      isBridgeWebSocketUpgradePath(
+        "/__universal/events?source=ui",
+        "/__universal",
+      ),
+    ).toBe(true);
+    expect(
+      isBridgeWebSocketUpgradePath(
+        "/__universal/runtime/ws?session=ui",
+        "/__universal",
+      ),
+    ).toBe(true);
+    expect(
+      isBridgeWebSocketUpgradePath(
+        "/__universal/runtime/other",
+        "/__universal",
+      ),
+    ).toBe(false);
   });
 });

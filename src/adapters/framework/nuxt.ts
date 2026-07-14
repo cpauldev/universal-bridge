@@ -1,9 +1,10 @@
+import { fileURLToPath } from "node:url";
+
+import { isBridgeWebSocketUpgradePath } from "../../bridge/router.js";
 import {
   type ResolvedUniversalClientEntry,
   createUniversalClientEntryVitePlugin,
 } from "../client-entry.js";
-import { isEventsUpgradePath } from "../../bridge/router.js";
-import { fileURLToPath } from "node:url";
 import {
   type BridgeLifecycle,
   type MiddlewareAdapterServer,
@@ -32,13 +33,26 @@ export function createUniversalNuxtModule(
   const lifecycle = createBridgeLifecycle(resolvedOptions);
   let lastViteServer: MiddlewareAdapterServer | null = null;
 
+  function getGatewayAwareMiddlewareServer(
+    server: MiddlewareAdapterServer,
+  ): MiddlewareAdapterServer {
+    if (server.httpServer) return server;
+
+    return {
+      ...server,
+      httpServer: {
+        on: () => undefined,
+      },
+    };
+  }
+
   const bridgePlugin = {
     name: resolvedOptions.adapterName,
     enforce: "pre" as const,
 
     async configureServer(server: MiddlewareAdapterServer) {
-      lastViteServer = server;
-      await lifecycle.setup(server);
+      lastViteServer = getGatewayAwareMiddlewareServer(server);
+      await lifecycle.setup(lastViteServer);
     },
   };
   const clientEntryPlugin = createUniversalClientEntryVitePlugin(clientEntries);
@@ -155,7 +169,7 @@ export function createUniversalNuxtModule(
           const sources = listenerServer.__universalBridgeUpgradeSources;
           if (sources) {
             for (const [prefix, getBridge] of sources.entries()) {
-              if (!isEventsUpgradePath(requestPath, prefix)) continue;
+              if (!isBridgeWebSocketUpgradePath(requestPath, prefix)) continue;
               const bridge = getBridge();
               if (!bridge) {
                 socket.destroy();

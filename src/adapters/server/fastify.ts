@@ -50,7 +50,12 @@ export async function attachUniversalToFastify(
   fastify: FastifyLikeInstance,
   options: FastifyUniversalOptions = {},
 ): Promise<FastifyBridgeHandle> {
-  const bridge = await createUniversalBridge(resolveAdapterOptions(options));
+  const bridge = await createUniversalBridge(
+    resolveAdapterOptions({
+      ...options,
+      runtimeWebSocketGatewaySupported: false,
+    }),
+  );
 
   fastify.addHook(
     "onRequest",

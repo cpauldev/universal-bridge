@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it } from "bun:test";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 
-import { type ResolvedUniversalClientEntry } from "../adapters/client-entry.js";
+import {
+  type ResolvedUniversalClientEntry,
+  createUniversalClientEntryVitePlugin,
+} from "../adapters/client-entry.js";
 import {
   createUniversalAngularCliProxyConfig,
   withUniversalAngularCliProxyConfig,
@@ -245,6 +251,111 @@ describe("universal-bridge adapters", () => {
       config.plugins?.some(
         (plugin) => plugin.name === "universal-bridge:client-entry",
       ),
+    ).toBe(true);
+  });
+
+  it("client entry plugin bootstraps React Router client entries", () => {
+    const plugin = createUniversalClientEntryVitePlugin(clientEntries);
+    const defaultEntry = plugin?.transform(
+      "export default function hydrate() {}",
+      "C:/repo/node_modules/@react-router/dev/dist/config/defaults/entry.client.tsx",
+    );
+    const appEntry = plugin?.transform(
+      "export default function hydrate() {}",
+      "C:/repo/app/entry.client.tsx",
+    );
+
+    expect(defaultEntry).toContain("@tests/client-entry");
+    expect(defaultEntry).toContain("/__universal/tests-client-entry");
+    expect(appEntry).toContain("@tests/client-entry");
+    expect(appEntry).toContain("/__universal/tests-client-entry");
+  });
+
+  it("client entry plugin resolves registered modules from the Vite project root", () => {
+    const root = mkdtempSync(join(tmpdir(), "universal-client-entry-"));
+    const packageDir = join(root, "node_modules", "@tests", "client-entry");
+    mkdirSync(packageDir, { recursive: true });
+    writeFileSync(
+      join(packageDir, "package.json"),
+      JSON.stringify({
+        name: "@tests/client-entry",
+        type: "module",
+        exports: "./index.js",
+      }),
+    );
+    writeFileSync(join(packageDir, "index.js"), "export {};\n");
+
+    try {
+      const plugin = createUniversalClientEntryVitePlugin(clientEntries);
+      plugin?.configResolved({ root });
+
+      expect(plugin?.resolveId("@tests/client-entry")).toBe(
+        join(packageDir, "index.js"),
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("createUniversalNuxtModule keeps the runtime websocket gateway capability without a Vite httpServer", async () => {
+    const module = createUniversalNuxtModule({
+      autoStart: false,
+      runtimeWebSocketGateway: { path: "/ws" },
+    });
+    const hooks: Record<string, (...args: unknown[]) => void> = {};
+    module(
+      {},
+      {
+        options: { dev: true },
+        hook: (name: string, listener: (...args: unknown[]) => void) => {
+          hooks[name] = listener;
+        },
+      },
+    );
+
+    const config: {
+      plugins?: Array<{ configureServer?: (server: unknown) => Promise<void> }>;
+    } = {};
+    hooks["vite:extendConfig"]?.(config);
+    const plugin = config.plugins?.find(
+      (candidate) => candidate.configureServer,
+    );
+    const middlewareHandlers: Array<(...args: unknown[]) => void> = [];
+    await plugin?.configureServer?.({
+      middlewares: {
+        use: (handler: (...args: unknown[]) => void) => {
+          middlewareHandlers.push(handler);
+        },
+      },
+      httpServer: null,
+    });
+
+    const handler = middlewareHandlers[0];
+    if (!handler) throw new Error("Expected Nuxt bridge middleware");
+
+    const responseBody = await new Promise<string>((resolve, reject) => {
+      const req = {
+        method: "GET",
+        url: "/__universal/state",
+        headers: { host: "localhost" },
+      };
+      let body = "";
+      const res = {
+        writableEnded: false,
+        writeHead: () => undefined,
+        end: (chunk?: string) => {
+          if (chunk) body += chunk;
+          res.writableEnded = true;
+          resolve(body);
+        },
+      };
+      handler(req, res, (error?: unknown) => {
+        if (error) reject(error);
+      });
+    });
+
+    expect(
+      JSON.parse(responseBody).capabilities.hasRuntimeWebSocketGateway,
     ).toBe(true);
   });
 

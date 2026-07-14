@@ -48,6 +48,7 @@ describe("UniversalBridge", () => {
     expect(state.capabilities.canStartRuntime).toBe(false);
     expect(state.capabilities.canRestartRuntime).toBe(false);
     expect(state.capabilities.canStopRuntime).toBe(false);
+    expect(state.capabilities.hasRuntimeWebSocketGateway).toBe(false);
     expect(state.runtime.phase).toBe("stopped");
     expect(state.transportState).toBe("bridge_detecting");
   });
@@ -66,6 +67,17 @@ describe("UniversalBridge", () => {
     expect(state.capabilities.canStartRuntime).toBe(true);
     expect(state.capabilities.canRestartRuntime).toBe(true);
     expect(state.capabilities.canStopRuntime).toBe(true);
+  });
+
+  it("reports the runtime WebSocket gateway when configured", () => {
+    const bridge = new UniversalBridge({
+      autoStart: false,
+      runtimeWebSocketGateway: { path: "/ws" },
+    });
+    bridges.push(bridge);
+    expect(bridge.getState().capabilities.hasRuntimeWebSocketGateway).toBe(
+      true,
+    );
   });
 
   it("returns a deterministic error for runtime start without command", async () => {
@@ -227,5 +239,31 @@ describe("UniversalBridge", () => {
     expect(parsed.error.code).toBe("invalid_request");
     expect(parsed.error.details?.wsSubprotocol).toBe(UNIVERSAL_WS_SUBPROTOCOL);
     expect(destroyed).toBe(false);
+  });
+
+  it("does not advertise the bridge event subprotocol for gateway errors", () => {
+    const bridge = new UniversalBridge({ autoStart: false });
+    bridges.push(bridge);
+
+    let responseText = "";
+    const socket = {
+      end: (chunk?: string | Buffer) => {
+        responseText =
+          typeof chunk === "string" ? chunk : (chunk?.toString() ?? "");
+      },
+      destroy: () => {},
+    } as unknown as import("stream").Duplex;
+    const request = {
+      url: "/__universal/runtime/ws",
+      headers: {},
+    } as unknown as import("http").IncomingMessage;
+
+    bridge.handleUpgrade(request, socket, Buffer.alloc(0));
+
+    const payload = responseText.split("\r\n\r\n")[1];
+    const parsed = JSON.parse(payload) as {
+      error: { details?: Record<string, unknown> };
+    };
+    expect(parsed.error.details?.wsSubprotocol).toBeUndefined();
   });
 });

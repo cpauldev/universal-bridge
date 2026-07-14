@@ -2,7 +2,9 @@ import {
   type DashboardActionId,
   type DashboardControllerState,
   type DashboardFrameworkId,
+  type DashboardTableCell,
   createDashboardController,
+  createRuntimeWebSocketDemoController,
 } from "@example/universal-overlay/dashboard";
 import {
   type IconNode,
@@ -33,6 +35,9 @@ import {
   createCardDescription,
   createCardHeader,
   createCardTitle,
+  createFieldLabel,
+  createTableCell,
+  createTableRow,
 } from "./ui";
 
 const ACTION_ICONS: Record<DashboardActionId, IconNode> = {
@@ -182,7 +187,9 @@ function createRuntimeCard(
 ): RuntimeCardRefs {
   const framework = getFrameworkVisual(frameworkId);
   const frameworkIconColor =
-    framework.id === "astro" || framework.id === "nextjs"
+    framework.id === "astro" ||
+    framework.id === "nextjs" ||
+    framework.id === "react-router"
       ? "var(--card-foreground)"
       : framework.id === "react"
         ? "#06b6d4"
@@ -281,6 +288,98 @@ function syncControlButtons(
   }
 }
 
+interface RuntimeWebSocketDemo {
+  endpoint: string;
+  runtimeKey: string;
+  dispose: () => void;
+}
+
+function getTextCellText(cell: DashboardTableCell | undefined): string | null {
+  return cell?.kind === "text" ? cell.text : null;
+}
+
+function getBadgeCellText(cell: DashboardTableCell | undefined): string | null {
+  return cell?.kind === "badge" ? cell.text : null;
+}
+
+function mountRuntimeWebSocketDemo(
+  panelsHost: HTMLElement,
+  endpoint: string,
+  runtimeKey: string,
+): RuntimeWebSocketDemo | null {
+  const panel = panelsHost.querySelector<HTMLElement>(
+    '[data-runtime-panel="runtime-websocket"]',
+  );
+  const tableBody = panel?.querySelector<HTMLTableSectionElement>(
+    '[data-runtime-table-body="true"]',
+  );
+  if (!tableBody) return null;
+
+  const socketRow = createTableRow();
+  const messageRow = createTableRow();
+  const actionsRow = createTableRow();
+  const createLabelCell = (label: string) => {
+    const cell = createTableCell("example-status-label-cell");
+    cell.appendChild(
+      createFieldLabel(label, undefined, "example-status-label"),
+    );
+    return cell;
+  };
+  const socketValue = createTableCell("example-status-value-cell");
+  const messageValue = createTableCell("example-status-value-cell");
+  const actionsValue = createTableCell("example-status-value-cell");
+  const delayActions = document.createElement("span");
+  delayActions.className = "example-runtime-delay-actions";
+  socketRow.append(createLabelCell("Demo socket"), socketValue);
+  actionsRow.append(createLabelCell("Demo delay"), actionsValue);
+  messageRow.append(createLabelCell("Demo message"), messageValue);
+  tableBody.append(socketRow, actionsRow, messageRow);
+
+  const url = new URL(endpoint, window.location.origin);
+  url.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const buttons: HTMLButtonElement[] = [];
+  const setSocket = (value: string) => (socketValue.textContent = value);
+  const setMessage = (value: string) => (messageValue.textContent = value);
+  const setButtonsDisabled = (disabled: boolean) => {
+    for (const button of buttons) {
+      button.disabled = disabled;
+    }
+  };
+  const controller = createRuntimeWebSocketDemoController({
+    url: url.toString(),
+    onState: (state) => {
+      const disabled = state.connection !== "live" || state.pending;
+      setSocket(state.connectionLabel);
+      setMessage(state.message);
+      setButtonsDisabled(disabled);
+    },
+  });
+  for (const seconds of [1, 2, 3] as const) {
+    const button = new Button({
+      size: "sm",
+      variant: "outline",
+      onClick: () => {
+        controller.sendDelay(seconds);
+      },
+    }).getElement();
+    button.textContent = `${seconds}s`;
+    button.disabled = true;
+    buttons.push(button);
+    delayActions.appendChild(button);
+  }
+  actionsValue.appendChild(delayActions);
+  return {
+    endpoint,
+    runtimeKey,
+    dispose: () => {
+      controller.close();
+      socketRow.remove();
+      messageRow.remove();
+      actionsRow.remove();
+    },
+  };
+}
+
 export function mountExampleDashboard(options: {
   root: HTMLElement;
   frameworkId: DashboardFrameworkId;
@@ -290,6 +389,7 @@ export function mountExampleDashboard(options: {
   let theme = getInitialTheme();
   let runtimeSummaryText = "";
   let panelsSignature = "";
+  let runtimeWebSocketDemo: RuntimeWebSocketDemo | null = null;
   const { runtimeCardHost } = renderDashboardShell({
     root: options.root,
     theme,
@@ -323,14 +423,48 @@ export function mountExampleDashboard(options: {
     );
     if (panelsSignature !== nextPanelsSignature) {
       panelsSignature = nextPanelsSignature;
+      runtimeWebSocketDemo?.dispose();
+      runtimeWebSocketDemo = null;
       panelsHost.replaceChildren(
         ...createRuntimePanels(runtimeState.runtimeSections),
       );
     } else {
-      syncRuntimePanels(
+      syncRuntimePanels(panelsHost, runtimeState.runtimeSections);
+    }
+
+    const websocketSection = runtimeState.runtimeSections.find(
+      (section) => section.id === "runtime-websocket",
+    );
+    const endpoint = getTextCellText(
+      websocketSection?.rows.find((row) => row.key === "gateway-route")?.value,
+    );
+    const gatewayAvailable =
+      getBadgeCellText(
+        websocketSection?.rows.find((row) => row.key === "capability")?.value,
+      ) === "Available";
+    const runtimeSection = runtimeState.runtimeSections.find(
+      (section) => section.id === "runtime-control",
+    );
+    const runtimeKey =
+      getTextCellText(
+        runtimeSection?.rows.find((row) => row.key === "started")?.value,
+      ) ?? "not-running";
+    if (
+      gatewayAvailable &&
+      endpoint &&
+      (runtimeWebSocketDemo?.endpoint !== endpoint ||
+        runtimeWebSocketDemo.runtimeKey !== runtimeKey)
+    ) {
+      runtimeWebSocketDemo?.dispose();
+      runtimeWebSocketDemo = mountRuntimeWebSocketDemo(
         panelsHost,
-        runtimeState.runtimeSections,
+        endpoint,
+        runtimeKey,
       );
+    }
+    if ((!gatewayAvailable || !endpoint) && runtimeWebSocketDemo) {
+      runtimeWebSocketDemo.dispose();
+      runtimeWebSocketDemo = null;
     }
   };
 
@@ -358,6 +492,7 @@ export function mountExampleDashboard(options: {
       clockTimer = null;
     }
     unsubscribe();
+    runtimeWebSocketDemo?.dispose();
     controller.stop();
   };
 }

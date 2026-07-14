@@ -1,5 +1,6 @@
 export const BRIDGE_PREFIX_DEFAULT = "/__universal";
 export const EVENTS_PATH = "/events";
+export const RUNTIME_WEBSOCKET_PATH = "/runtime/ws";
 export const JSON_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
 };

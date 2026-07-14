@@ -1,9 +1,13 @@
 export {
-  DASHBOARD_FRAMEWORKS,
   createDashboardDiscoveryController,
   createInitialDiscoveryState,
   resolveDiscoveryConfig,
 } from "./discovery.js";
+export {
+  DASHBOARD_FRAMEWORKS,
+  EXAMPLE_PORT_RANGE_START,
+  getFrameworkDefaultPort,
+} from "../example-hosts.js";
 export {
   buildFileMetadataRows,
   buildRuntimeSections,
@@ -23,6 +27,12 @@ export {
   formatUptime,
 } from "../overlay/format.js";
 export { createDashboardController } from "./controller.js";
+export { createRuntimeWebSocketDemoController } from "./runtime-websocket.js";
+export type {
+  RuntimeWebSocketConnection,
+  RuntimeWebSocketDemoController,
+  RuntimeWebSocketDemoState,
+} from "./runtime-websocket.js";
 export type {
   DashboardActionId,
   DashboardActionState,

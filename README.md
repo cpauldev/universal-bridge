@@ -8,7 +8,7 @@ Universal Bridge is a framework- and runtime-agnostic protocol for mounting a sa
 
 Frameworks and runtimes expose different dev-server integration points—plugins, rewrites, middleware, and server APIs. Without a shared layer, each tool needs a separate integration for every host.
 
-Universal Bridge mounts that shared layer at `/__universal/*`, providing HTTP health/state/control routes, WebSocket events, and API proxying. Framework-specific adapters translate it for each host environment.
+Universal Bridge mounts that shared layer at `/__universal/*`, providing HTTP health/state/control routes, WebSocket events, an optional runtime WebSocket gateway, and API proxying. Framework-specific adapters translate it for each host environment.
 
 ## Who is this for?
 
@@ -25,7 +25,7 @@ If you're using a tool that already includes Universal Bridge integration, confi
 - [Use cases](#use-cases)
 - [Quick start (Vite)](#quick-start-vite)
 - [Core concepts](#core-concepts)
-- [Integration surfaces](#integration-surfaces)
+- [Integration and runtime surfaces](#integration-and-runtime-surfaces)
 - [Public API reference](#public-api-reference)
 - [Configuration](#configuration)
 - [Protocol summary](#protocol-summary)
@@ -59,6 +59,7 @@ bun add universal-bridge
 - runtime lifecycle control (`start`/`restart` require `command`; `stop` is idempotent)
 - runtime status and capability reporting for UIs/automation
 - websocket event stream with protocol versioning
+- optional same-origin runtime WebSocket gateway
 - `/api/*` passthrough proxy from host origin to runtime origin
 - framework/server/build-tool adapter surfaces plus a preset API for tool packages
 
@@ -97,9 +98,9 @@ export default defineConfig({
 - **Protocol version**: current bridge protocol is `2` (`universal.v2+json` for negotiated event sockets).
 - **Preset API**: recommended integration API for tool authors so users configure one entry point (`mytool().vite()`, `mytool().next(...)`, etc.).
 
-## Integration surfaces
+## Integration and runtime surfaces
 
-| Host setup                                                                                 | Import path                    |
+| Surface                                                                                    | Import path                    |
 | ------------------------------------------------------------------------------------------ | ------------------------------ |
 | Vite-based dev servers (React, Vue, Solid, SvelteKit, Remix, TanStack Start, Vinext, etc.) | `universal-bridge/vite`        |
 | Next.js                                                                                    | `universal-bridge/next`        |
@@ -108,11 +109,13 @@ export default defineConfig({
 | Angular CLI proxy flow                                                                     | `universal-bridge/angular/cli` |
 | `Bun.serve`                                                                                | `universal-bridge/bun`         |
 | Node middleware + HTTP server                                                              | `universal-bridge/node`        |
+| Express middleware                                                                         | `universal-bridge/express`     |
 | Fastify                                                                                    | `universal-bridge/fastify`     |
 | Hono on Node server                                                                        | `universal-bridge/hono`        |
 | webpack-dev-server                                                                         | `universal-bridge/webpack`     |
 | Rsbuild dev server                                                                         | `universal-bridge/rsbuild`     |
 | Rspack dev server                                                                          | `universal-bridge/rspack`      |
+| Docker Compose runtime helper for adapters that manage a process                           | `universal-bridge/docker`      |
 
 ## Public API reference
 
@@ -124,6 +127,8 @@ export default defineConfig({
 | `createUniversalClient`                     | `universal-bridge/client`         |
 | `createBridgeRuntimeStore`                  | `universal-bridge/client`         |
 | `createClientRuntimeContext`                | `universal-bridge/client-runtime` |
+| `createDockerComposeRuntime`                | `universal-bridge/docker`         |
+| `attachUniversalToExpress`                  | `universal-bridge/express`        |
 | `startStandaloneUniversalBridgeServer`      | `universal-bridge`                |
 | `createUniversalBridge` / `UniversalBridge` | `universal-bridge`                |
 
@@ -142,22 +147,23 @@ For expanded API coverage (including lifecycle helpers, runtime-context utilitie
 
 Most adapter APIs accept shared bridge/runtime options.
 
-| Option                     | Type                                  | Default                    | Notes                                                                                             |
-| -------------------------- | ------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------- |
-| `bridgePathPrefix`         | `string`                              | `"/__universal"`           | Normalized to stay rooted under `/__universal`.                                                   |
-| `autoStart`                | `boolean`                             | `true`                     | Auto-start runtime on state/proxy/events paths.                                                   |
-| `command`                  | `string`                              | none                       | Required for managed runtime start/restart.                                                       |
-| `args`                     | `string[]`                            | `[]`                       | Runtime command args.                                                                             |
-| `cwd`                      | `string`                              | `process.cwd()`            | Runtime working directory.                                                                        |
-| `env`                      | `Record<string, string \| undefined>` | none                       | Extra runtime environment variables.                                                              |
-| `host`                     | `string`                              | `"127.0.0.1"`              | Runtime host binding.                                                                             |
-| `healthPath`               | `string`                              | `"/api/version"`           | Runtime health probe endpoint.                                                                    |
-| `startTimeoutMs`           | `number`                              | `15000`                    | Runtime startup timeout.                                                                          |
-| `runtimePortEnvVar`        | `string`                              | `"UNIVERSAL_RUNTIME_PORT"` | Env var populated with selected runtime port.                                                     |
-| `fallbackCommand`          | `string`                              | `"universal dev"`          | Returned in some runtime-control error payloads.                                                  |
-| `eventHeartbeatIntervalMs` | `number`                              | `30000`                    | WS heartbeat for stale client cleanup.                                                            |
-| `instance`                 | `{ id: string; label?: string }`      | none                       | Optional instance metadata in bridge state/health.                                                |
-| `additionalRewriteSources` | `string[]`                            | `[]`                       | Extra path prefixes proxied directly to the runtime (e.g. `["/dashboard/:path*"]`). Next.js only. |
+| Option                     | Type                                  | Default                    | Notes                                                                                            |
+| -------------------------- | ------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------ |
+| `bridgePathPrefix`         | `string`                              | `"/__universal"`           | Normalized to stay rooted under `/__universal`.                                                  |
+| `autoStart`                | `boolean`                             | `true`                     | Auto-start runtime on state, proxy, events, and runtime WebSocket gateway paths.                 |
+| `command`                  | `string`                              | none                       | Required for managed runtime start/restart.                                                      |
+| `args`                     | `string[]`                            | `[]`                       | Runtime command args.                                                                            |
+| `cwd`                      | `string`                              | `process.cwd()`            | Runtime working directory.                                                                       |
+| `env`                      | `Record<string, string \| undefined>` | none                       | Extra runtime environment variables.                                                             |
+| `host`                     | `string`                              | `"127.0.0.1"`              | Runtime host binding.                                                                            |
+| `healthPath`               | `string`                              | `"/api/version"`           | Runtime health probe endpoint.                                                                   |
+| `startTimeoutMs`           | `number`                              | `15000`                    | Runtime startup timeout.                                                                         |
+| `runtimePortEnvVar`        | `string`                              | `"UNIVERSAL_RUNTIME_PORT"` | Env var populated with selected runtime port.                                                    |
+| `fallbackCommand`          | `string`                              | `"universal dev"`          | Returned in some runtime-control error payloads.                                                 |
+| `eventHeartbeatIntervalMs` | `number`                              | `30000`                    | WS heartbeat for stale client cleanup.                                                           |
+| `runtimeWebSocketGateway`  | `{ path: string }`                    | none                       | Opt-in gateway at `/runtime/ws` to one managed runtime WebSocket path.                           |
+| `instance`                 | `{ id: string; label?: string }`      | none                       | Optional instance metadata in bridge state/health.                                               |
+| `additionalRewriteSources` | `string[]`                            | `[]`                       | Extra path prefixes proxied directly to the runtime by adapters that support direct passthrough. |
 
 ### Preset-specific options (`createUniversalPreset`)
 
@@ -179,19 +185,22 @@ With prefix `/__universal` (or `/__universal/<namespaceId>` for presets):
 - `POST /runtime/restart`
 - `POST /runtime/stop`
 - `WS /events`
+- `WS /runtime/ws` (when `runtimeWebSocketGateway` is configured)
 - `ANY /api/*` proxied to runtime `/api/*`
 
 Behavior highlights:
 
 - Route matching is query-safe.
-- `GET /state` may auto-start runtime when `autoStart` is enabled.
-- `POST /runtime/stop` is idempotent and disables auto-start until start/restart.
+- `GET /state`, `WS /events`, `WS /runtime/ws`, and proxy requests may auto-start runtime when `autoStart` is enabled.
+- `POST /runtime/stop` is idempotent and disables auto-start, including gateway-triggered auto-start, until start/restart.
+- `WS /events` carries bridge protocol events only.
+- `WS /runtime/ws` forwards one configured runtime WebSocket path without parsing app messages; runtime close/error affects only the paired gateway socket.
 - Bridge-generated errors use `{ success: false, message, error }` envelope.
 - Proxied `/api/*` responses pass through status/headers/body (including non-2xx).
 
 For normative protocol details, see `PROTOCOL.md`.
 
-For adapter-specific snippets (Next keying, Bun/Node/Fastify/Hono servers, webpack/Rsbuild/Rspack, Astro/Nuxt, Angular CLI, and standalone bridge usage), see `INTEGRATION_GUIDE.md`.
+For adapter-specific snippets (Next keying, Bun/Node/Express/Fastify/Hono servers, Docker Compose runtime helpers, webpack/Rsbuild/Rspack, Astro/Nuxt, Angular CLI, and standalone bridge usage), see `INTEGRATION_GUIDE.md`.
 
 ## Usage examples
 
@@ -246,6 +255,10 @@ import { createUniversalClient } from "universal-bridge/client";
 
 const client = createUniversalClient({ namespaceId: "mytool" });
 const state = await client.getState();
+const runtimeSocket = new WebSocket(
+  client.getRuntimeWebSocketUrl({ query: { session: "local" } }),
+  ["mytool.v1"],
+);
 
 const unsubscribe = client.subscribeEvents((event) => {
   if (event.type === "bridge-state") {
@@ -274,6 +287,9 @@ For implementation details, see `ARCHITECTURE.md`.
 
 - UniversalBridge does **not** ship a first-party UI.
 - Runtime start/restart are unavailable when `command` is not configured.
+- The runtime WebSocket gateway is opt-in, proxies only its configured runtime path, and forwards text/binary frames opaquely.
+- `/events` is bridge-only; runtime/app WebSocket traffic belongs on `/runtime/ws`.
+- The bridge does not reconnect runtime WebSockets, replay application traffic, or interpret application messages.
 - `bridgePathPrefix` is normalized under `/__universal`.
 - Package is ESM-only (`"type": "module"`).
 

@@ -1,0 +1,29 @@
+{
+  "name": "example-react-router",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "react-router dev",
+    "build": "react-router build",
+    "preview": "react-router-serve build/server/index.js"
+  },
+  "dependencies": {
+    "@example/shared": "workspace:*",
+    "@example/universal-overlay": "workspace:*",
+    "@react-router/node": "^7.18.0",
+    "isbot": "^5.1.32",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router": "^7.18.0"
+  },
+  "devDependencies": {
+    "@react-router/dev": "^7.18.0",
+    "@react-router/serve": "^7.18.0",
+    "@types/node": "^26.1.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.3"
+  }
+}

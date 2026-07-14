@@ -5,6 +5,20 @@ It mounts in a Shadow DOM, isolated from the host application.
 
 ![Universal Overlay mounted over a host application](assets/universal-overlay-mounted.webp)
 
+## Table of Contents
+
+- [What the overlay demonstrates](#what-the-overlay-demonstrates)
+- [What the reference overlay exercises](#what-the-reference-overlay-exercises)
+- [Included framework hosts](#included-framework-hosts)
+- [Prerequisites](#prerequisites)
+- [Setup (first run)](#setup-first-run)
+- [Run framework hosts](#run-framework-hosts)
+- [Verify bridge wiring](#verify-bridge-wiring)
+- [Rebuild after changes](#rebuild-after-changes)
+- [Example structure](#example-structure)
+- [Framework-specific notes](#framework-specific-notes)
+- [Troubleshooting](#troubleshooting)
+
 ## What the overlay demonstrates
 
 Add `universalOverlay()` to a host's framework configuration. In development,
@@ -30,17 +44,18 @@ runtime APIs through the bridge.
 
 ## Included framework hosts
 
-| ID          | Framework  | Starting port |
-| ----------- | ---------- | ------------- |
-| `react`     | React      | 4601          |
-| `vue`       | Vue        | 4602          |
-| `sveltekit` | SvelteKit  | 4603          |
-| `solid`     | Solid      | 4604          |
-| `astro`     | Astro      | 4605          |
-| `nextjs`    | Next.js    | 4606          |
-| `nuxt`      | Nuxt       | 4607          |
-| `vanilla`   | Vanilla JS | 4608          |
-| `vinext`    | Vinext     | 4609          |
+| ID             | Framework    | Starting port |
+| -------------- | ------------ | ------------- |
+| `react`        | React        | 4601          |
+| `react-router` | React Router | 4602          |
+| `nextjs`       | Next.js      | 4603          |
+| `vue`          | Vue          | 4604          |
+| `astro`        | Astro        | 4605          |
+| `solid`        | Solid        | 4606          |
+| `sveltekit`    | SvelteKit    | 4607          |
+| `nuxt`         | Nuxt         | 4608          |
+| `vanilla`      | Vanilla JS   | 4609          |
+| `vinext`       | Vinext       | 4610          |
 
 The runner assigns these ports, stops existing processes that use the selected
 ports, and then starts the hosts.
@@ -77,7 +92,8 @@ bun run example
 ### Start selected hosts
 
 ```bash
-bun run example react nextjs
+bun run example react react-router
+bun run example nextjs
 bun run example vinext
 ```
 
@@ -85,7 +101,14 @@ bun run example vinext
 
 ```bash
 bun run example --no-open
-bun run example react nextjs --no-open
+bun run example react react-router --no-open
+```
+
+### Verify after startup
+
+```bash
+bun run example --verify
+bun run example react nextjs --verify --no-open
 ```
 
 The runner passes the assigned port to each host; example configs do not need
@@ -94,7 +117,7 @@ to set one.
 ## Verify bridge wiring
 
 ```bash
-bun run verify:example
+bun run example:verify
 ```
 
 Verification checks each running example for:
@@ -105,7 +128,7 @@ Verification checks each running example for:
 You can target specific framework hosts:
 
 ```bash
-bun run verify:example react nuxt
+bun run example:verify react nuxt
 ```
 
 ## Rebuild after changes
@@ -119,7 +142,7 @@ Commands:
 
 ```bash
 bun run build
-bun run --filter @example/universal-overlay build
+bun run --cwd example/universal-overlay build
 ```
 
 ## Example structure

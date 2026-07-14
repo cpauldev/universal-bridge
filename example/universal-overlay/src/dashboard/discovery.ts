@@ -1,3 +1,4 @@
+import { DASHBOARD_FRAMEWORKS } from "../example-hosts.js";
 import { BRIDGE_BASE_PATH } from "../overlay/constants.js";
 import type {
   DashboardDiscoveredInstance,
@@ -9,20 +10,8 @@ import type {
   DashboardHealthPayload,
 } from "./types.js";
 
-export const DASHBOARD_FRAMEWORKS: DashboardFrameworkDefinition[] = [
-  { id: "react", label: "React", defaultPort: 5173 },
-  { id: "vue", label: "Vue", defaultPort: 5174 },
-  { id: "sveltekit", label: "SvelteKit", defaultPort: 5175 },
-  { id: "solid", label: "Solid", defaultPort: 5178 },
-  { id: "astro", label: "Astro", defaultPort: 4321 },
-  { id: "nextjs", label: "Next.js", defaultPort: 3000 },
-  { id: "nuxt", label: "Nuxt", defaultPort: 3001 },
-  { id: "vanilla", label: "Vanilla", defaultPort: 5176 },
-  { id: "vinext", label: "Vinext", defaultPort: 5177 },
-];
-
 const DEFAULT_CONFIG: DashboardDiscoveryConfig = {
-  frameworks: DASHBOARD_FRAMEWORKS,
+  frameworks: [...DASHBOARD_FRAMEWORKS],
   hostnames: ["127.0.0.1", "localhost"],
   scanWindowSize: 10,
   probeTimeoutMs: 800,
@@ -81,6 +70,23 @@ function createFrameworkItems(
   }));
 }
 
+function compareDiscoveredInstances(
+  a: DashboardDiscoveredInstance,
+  b: DashboardDiscoveredInstance,
+): number {
+  if (a.online !== b.online) {
+    return a.online ? -1 : 1;
+  }
+
+  const healthyA = a.lastHealthyAt ?? 0;
+  const healthyB = b.lastHealthyAt ?? 0;
+  if (healthyA !== healthyB) {
+    return healthyB - healthyA;
+  }
+
+  return a.port - b.port;
+}
+
 export function createInitialDiscoveryState(
   frameworks: DashboardFrameworkDefinition[] = DASHBOARD_FRAMEWORKS,
 ): DashboardDiscoveryState {
@@ -124,12 +130,19 @@ function buildBoundedScanOrigins(
     origins.add(normalizeOrigin(knownOrigin));
   }
 
-  for (const framework of config.frameworks) {
-    for (let offset = 0; offset <= config.scanWindowSize; offset += 1) {
-      const port = framework.defaultPort + offset;
-      for (const hostname of config.hostnames) {
-        origins.add(`http://${hostname}:${port}`);
-      }
+  const defaultPorts = config.frameworks.map(
+    (framework) => framework.defaultPort,
+  );
+  if (defaultPorts.length === 0) {
+    return [...origins];
+  }
+
+  const firstPort = Math.min(...defaultPorts);
+  const lastPort = Math.max(...defaultPorts) + config.scanWindowSize;
+
+  for (let port = firstPort; port <= lastPort; port += 1) {
+    for (const hostname of config.hostnames) {
+      origins.add(`http://${hostname}:${port}`);
     }
   }
 
@@ -195,17 +208,7 @@ function resolveFrameworkItems(input: {
   return input.frameworks.map((framework) => {
     const instances = values
       .filter((instance) => instance.frameworkId === framework.id)
-      .sort((a, b) => {
-        if (a.online !== b.online) {
-          return a.online ? -1 : 1;
-        }
-        const healthyA = a.lastHealthyAt ?? 0;
-        const healthyB = b.lastHealthyAt ?? 0;
-        if (healthyA !== healthyB) {
-          return healthyB - healthyA;
-        }
-        return a.port - b.port;
-      });
+      .sort(compareDiscoveredInstances);
 
     const onlineInstances = instances.filter((instance) => instance.online);
     const preferredCurrent = input.currentOrigin
@@ -215,17 +218,7 @@ function resolveFrameworkItems(input: {
         ) ?? null)
       : null;
 
-    const preferred =
-      preferredCurrent ??
-      onlineInstances.sort((a, b) => {
-        const healthyA = a.lastHealthyAt ?? 0;
-        const healthyB = b.lastHealthyAt ?? 0;
-        if (healthyA !== healthyB) {
-          return healthyB - healthyA;
-        }
-        return a.port - b.port;
-      })[0] ??
-      null;
+    const preferred = preferredCurrent ?? onlineInstances[0] ?? null;
 
     return {
       id: framework.id,

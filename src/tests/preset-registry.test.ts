@@ -14,6 +14,10 @@ type StandaloneBridgeLike = {
   close?: () => Promise<void>;
 };
 
+type ConfigurableVitePlugin = {
+  configureServer?: (server: unknown) => Promise<void> | void;
+};
+
 const bridgeGlobal = globalThis as typeof globalThis & {
   [key: string]: unknown;
 };
@@ -37,8 +41,7 @@ async function cleanupSeededBridges(): Promise<void> {
   const tasks: Promise<void>[] = [];
   for (const key of seededKeys) {
     const bridgePromise = bridgeGlobal[key] as
-      | Promise<StandaloneBridgeLike>
-      | undefined;
+      Promise<StandaloneBridgeLike> | undefined;
     if (bridgePromise) {
       tasks.push(
         (async () => {
@@ -161,17 +164,21 @@ describe("preset registry + namespacing", () => {
     )[0];
 
     const fixture = createMiddlewareAdapterServerFixture();
-    await stalePlugin?.configureServer?.(fixture.server as never);
+    await (
+      stalePlugin as ConfigurableVitePlugin | undefined
+    )?.configureServer?.(fixture.server);
     expect(fixture.getMiddlewareCount()).toBe(1);
 
-    await activePlugin?.configureServer?.(fixture.server as never);
+    await (
+      activePlugin as ConfigurableVitePlugin | undefined
+    )?.configureServer?.(fixture.server);
     expect(fixture.getMiddlewareCount()).toBe(1);
 
     fixture.emit("close");
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
 
-  it("handles Nuxt event upgrades for every composed preset prefix", () => {
+  it("handles Nuxt bridge WebSocket upgrades for every composed preset prefix", () => {
     createUniversalPreset({
       identity: { packageName: "@acme/nuxt-a" },
     }).nuxt();
@@ -238,7 +245,7 @@ describe("preset registry + namespacing", () => {
     if (!dispatcher)
       throw new Error("Expected Nuxt dispatcher upgrade listener");
     dispatcher(
-      { url: `${secondPrefix}/events` },
+      { url: `${secondPrefix}/runtime/ws` },
       { destroy: () => (socketDestroyed = true) },
       Buffer.from(""),
     );

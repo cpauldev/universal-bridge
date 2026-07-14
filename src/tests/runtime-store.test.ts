@@ -7,6 +7,7 @@ import {
   type StandaloneBridgeServer,
   startStandaloneUniversalBridgeServer,
 } from "../bridge/standalone.js";
+import type { UniversalWebSocketLike } from "../client/client.js";
 import { createBridgeRuntimeStore } from "../client/runtime-store.js";
 
 const fixtureRuntimeScript = resolve(
@@ -45,7 +46,7 @@ describe("bridge runtime store", () => {
     const options = {
       baseUrl: server.baseUrl,
       webSocketFactory: (url: string, protocols: string[]) =>
-        new WebSocket(url, protocols) as unknown as WebSocket,
+        new WebSocket(url, protocols) as unknown as UniversalWebSocketLike,
     };
     const first = createBridgeRuntimeStore(options);
     const second = createBridgeRuntimeStore(options);
@@ -56,12 +57,18 @@ describe("bridge runtime store", () => {
     expect(first.getSnapshot().bridgeState?.runtime.phase).toBe("stopped");
 
     await second.start();
-    await waitFor(() => first.getSnapshot().bridgeState?.runtime.phase === "running");
+    await waitFor(
+      () => first.getSnapshot().bridgeState?.runtime.phase === "running",
+    );
     expect(first.getSnapshot().bridgeState?.transportState).toBe("connected");
 
     await first.stop();
-    await waitFor(() => first.getSnapshot().bridgeState?.runtime.phase === "stopped");
-    expect(first.getSnapshot().bridgeState?.transportState).toBe("bridge_detecting");
+    await waitFor(
+      () => first.getSnapshot().bridgeState?.runtime.phase === "stopped",
+    );
+    expect(first.getSnapshot().bridgeState?.transportState).toBe(
+      "bridge_detecting",
+    );
 
     unsubscribe();
     first.destroy();

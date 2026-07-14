@@ -99,6 +99,12 @@ function toBridgeOptions(
   return { ...bridgeOptions, additionalProxyPaths };
 }
 
+export function resolveBridgeOptionsFromAdapterOptions(
+  options: UniversalAdapterOptions = {},
+): UniversalBridgeOptions {
+  return toBridgeOptions(resolveAdapterOptions(options));
+}
+
 export async function attachBridgeToServer(
   server: MiddlewareAdapterServer,
   options: UniversalAdapterOptions,

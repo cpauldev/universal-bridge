@@ -64,6 +64,15 @@ export class UniversalBridge {
         : false;
     },
   });
+  #runtimeWebSocketProtocols = new WeakMap<IncomingMessage, string>();
+  #runtimeWss = new WebSocketServer({
+    noServer: true,
+    perMessageDeflate: false,
+    handleProtocols: (protocols, request) => {
+      const protocol = this.#runtimeWebSocketProtocols.get(request);
+      return protocol && protocols.has(protocol) ? protocol : false;
+    },
+  });
   #eventBus: BridgeEventBus;
   #closed = false;
   #autoStartEnabled = true;
@@ -81,6 +90,10 @@ export class UniversalBridge {
           ? "hybrid"
           : "helper"
         : "host",
+      Boolean(
+        this.#options.runtimeWebSocketGateway &&
+        this.#options.runtimeWebSocketGatewaySupported,
+      ),
     );
     this.#autoStartEnabled = this.#options.autoStart;
     this.#eventBus = new BridgeEventBus(this.#options.eventHeartbeatIntervalMs);
@@ -112,7 +125,14 @@ export class UniversalBridge {
     this.#closed = true;
     await this.#helper.stop();
     this.#eventBus.close();
+    for (const client of this.#wss.clients) {
+      client.terminate();
+    }
+    for (const client of this.#runtimeWss.clients) {
+      client.terminate();
+    }
     this.#wss.close();
+    this.#runtimeWss.close();
   }
 
   isClosed(): boolean {
@@ -120,6 +140,10 @@ export class UniversalBridge {
   }
 
   async attach(server: BridgeMiddlewareServer): Promise<void> {
+    if (!server.httpServer) {
+      this.#capabilities.hasRuntimeWebSocketGateway = false;
+    }
+
     server.middlewares.use((req, res, next) => {
       void this.handleHttpRequest(req, res, next).catch((error) => {
         next?.(error);
@@ -143,10 +167,21 @@ export class UniversalBridge {
     handleBridgeUpgrade(req, socket, head, {
       bridgePathPrefix: this.#options.bridgePathPrefix,
       wss: this.#wss,
+      runtimeWss: this.#runtimeWss,
+      setRuntimeWebSocketProtocol: (request, protocol) => {
+        this.#runtimeWebSocketProtocols.set(request, protocol);
+      },
+      clearRuntimeWebSocketProtocol: (request) => {
+        this.#runtimeWebSocketProtocols.delete(request);
+      },
       eventBus: this.#eventBus,
       shouldAutoStartRuntime: () => this.shouldAutoStartRuntime(),
       ensureRuntimeStarted: () => this.#helper.ensureStarted(),
       getState: () => this.getState(),
+      runtimeWebSocketGateway: this.#options.runtimeWebSocketGateway,
+      hasRuntimeWebSocketGateway: () =>
+        this.#capabilities.hasRuntimeWebSocketGateway,
+      getRuntimeUrl: () => this.#helper.getRuntimeUrl(),
     });
   }
 
@@ -273,4 +308,7 @@ export async function createUniversalBridge(
 ): Promise<UniversalBridge> {
   return new UniversalBridge(options);
 }
-export type { UniversalBridgeOptions } from "./options.js";
+export type {
+  RuntimeWebSocketGatewayOptions,
+  UniversalBridgeOptions,
+} from "./options.js";

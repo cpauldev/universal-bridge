@@ -1,6 +1,10 @@
-import type { BridgeRuntimeSnapshot, UniversalBridgeState } from "universal-bridge";
+import type {
+  BridgeRuntimeSnapshot,
+  UniversalBridgeState,
+} from "universal-bridge";
 
-import { BRIDGE_BASE_PATH } from "../overlay/constants.js";
+import { OVERLAY_RUNTIME_FALLBACK_COMMAND } from "../overlay-config.js";
+import { bridgeRoute } from "../overlay/bridge-routes.js";
 import {
   formatBytes,
   formatDate,
@@ -23,7 +27,6 @@ import type {
   DashboardTransportState,
 } from "./types.js";
 
-const DEFAULT_FALLBACK_COMMAND = "universal-overlay dev";
 const DEFAULT_FAILURE_THRESHOLD = 1;
 const NO_ERROR_MESSAGE = "Failed to reach bridge state";
 
@@ -68,6 +71,8 @@ function areBridgeStatesEqual(
     a.capabilities.canStartRuntime === b.capabilities.canStartRuntime &&
     a.capabilities.canRestartRuntime === b.capabilities.canRestartRuntime &&
     a.capabilities.canStopRuntime === b.capabilities.canStopRuntime &&
+    a.capabilities.hasRuntimeWebSocketGateway ===
+      b.capabilities.hasRuntimeWebSocketGateway &&
     normalizeNullableString(a.capabilities.fallbackCommand) ===
       normalizeNullableString(b.capabilities.fallbackCommand) &&
     a.capabilities.wsSubprotocol === b.capabilities.wsSubprotocol &&
@@ -162,7 +167,8 @@ function resolveStoreConnectionBadgeVariant(
   connection: BridgeRuntimeSnapshot["connection"],
 ): DashboardBadgeVariant {
   if (connection === "open") return "success";
-  if (connection === "connecting" || connection === "reconnecting") return "warning";
+  if (connection === "connecting" || connection === "reconnecting")
+    return "warning";
   if (connection === "idle") return "secondary";
   return "error";
 }
@@ -173,10 +179,6 @@ function asLinkCell(
   tone: "default" | "muted" | "code" = "default",
 ): DashboardTableCell {
   return { kind: "link", text, href, tone };
-}
-
-function toBridgeEndpoint(path: string): string {
-  return `${BRIDGE_BASE_PATH}${path}`;
 }
 
 function resolveTransportBadgeVariant(
@@ -195,12 +197,36 @@ function resolveTransportBadgeVariant(
   return "default";
 }
 
+function resolveBridgeTransportDisplay(live: DashboardLiveState): {
+  text: string;
+  variant: DashboardBadgeVariant;
+} {
+  if (live.bridgeState?.runtime.phase === "stopped") {
+    return { text: "Runtime stopped", variant: "secondary" };
+  }
+
+  return {
+    text: formatTransportState(live.transportState),
+    variant: resolveTransportBadgeVariant(live.transportState),
+  };
+}
+
 function resolveRuntimePhaseBadgeVariant(phase: string): DashboardBadgeVariant {
   if (phase === "running") return "success";
   if (phase === "starting" || phase === "stopping") return "warning";
   if (phase === "error") return "error";
   if (phase === "stopped") return "secondary";
   return "default";
+}
+
+function resolveAvailabilityBadgeVariant(
+  available: boolean,
+): DashboardBadgeVariant {
+  return available ? "success" : "secondary";
+}
+
+function formatActionName(action: string): string {
+  return `${action.charAt(0).toUpperCase()}${action.slice(1)}`;
 }
 
 function pushRow(
@@ -221,7 +247,7 @@ export function createInitialDashboardLiveState(): DashboardLiveState {
     errorMessage: null,
     lastUpdatedAt: null,
     consecutiveFailures: 0,
-    fallbackCommand: DEFAULT_FALLBACK_COMMAND,
+    fallbackCommand: OVERLAY_RUNTIME_FALLBACK_COMMAND,
     protocolVersion: null,
   };
 }
@@ -292,6 +318,10 @@ export function resolveDashboardStatusBadge(state: DashboardLiveState): {
     return { text: "Disconnected", variant: "error" };
   }
 
+  if (state.bridgeState?.runtime.phase === "stopped") {
+    return { text: "Stopped", variant: "secondary" };
+  }
+
   if (state.transportState === "bridge_detecting") {
     return { text: "Detecting", variant: "warning" };
   }
@@ -319,6 +349,10 @@ export function resolveDashboardStatusSummary(
     state.transportState === "disconnected"
   ) {
     return state.errorMessage ?? "Runtime unavailable. Bridge appears closed.";
+  }
+
+  if (state.bridgeState?.runtime.phase === "stopped") {
+    return "Runtime is stopped. Start it to enable runtime-backed features.";
   }
 
   if (state.transportState === "bridge_detecting") {
@@ -392,7 +426,7 @@ export function buildRuntimeSections(input: {
 
   const controls: DashboardControlsSection = {
     id: "controls",
-    title: "Controls",
+    title: "Runtime Control",
     actions: resolveActionStates(
       phase,
       actionLoading,
@@ -401,19 +435,29 @@ export function buildRuntimeSections(input: {
     ...(live.errorMessage ? { message: live.errorMessage } : {}),
   };
 
-  const bridgeRows: DashboardTableRow[] = [];
+  const bridgeStateRows: DashboardTableRow[] = [];
+  const bridgeTransport = resolveBridgeTransportDisplay(live);
   pushRow(
-    bridgeRows,
+    bridgeStateRows,
+    "health-route",
+    "Health route",
+    asLinkCell("GET /health", bridgeRoute("/health"), "code"),
+  );
+  pushRow(
+    bridgeStateRows,
+    "state-route",
+    "State route",
+    asLinkCell("GET /state", bridgeRoute("/state"), "code"),
+  );
+  pushRow(
+    bridgeStateRows,
     "transport",
     "Transport",
-    asBadgeCell(
-      formatTransportState(live.transportState),
-      resolveTransportBadgeVariant(live.transportState),
-    ),
+    asBadgeCell(bridgeTransport.text, bridgeTransport.variant),
   );
   if (bridgeState?.protocolVersion) {
     pushRow(
-      bridgeRows,
+      bridgeStateRows,
       "protocol",
       "Protocol",
       asTextCell(`v${bridgeState.protocolVersion}`, "code"),
@@ -421,7 +465,7 @@ export function buildRuntimeSections(input: {
   }
   if (bridgeState?.instance) {
     pushRow(
-      bridgeRows,
+      bridgeStateRows,
       "instance",
       "Instance",
       asTextCell(
@@ -434,7 +478,7 @@ export function buildRuntimeSections(input: {
   }
   if (live.lastUpdatedAt) {
     pushRow(
-      bridgeRows,
+      bridgeStateRows,
       "last-update",
       "Last state update",
       asTextCell(formatLastUpdated(live.lastUpdatedAt, now), "muted"),
@@ -442,45 +486,30 @@ export function buildRuntimeSections(input: {
   }
   if (Number.isFinite(bridgeState?.revision)) {
     pushRow(
-      bridgeRows,
+      bridgeStateRows,
       "revision",
       "Revision",
-      asTextCell(String(bridgeState.revision), "code"),
+      asTextCell(String(bridgeState?.revision), "code"),
     );
   }
   if (bridgeState?.error) {
-    pushRow(bridgeRows, "error", "Bridge error", asTextCell(bridgeState.error));
+    pushRow(
+      bridgeStateRows,
+      "error",
+      "Bridge error",
+      asTextCell(bridgeState.error),
+    );
   }
 
-  const diagnosticsRows: DashboardTableRow[] = [];
-  pushRow(diagnosticsRows, "event-id", "Latest event ID", asTextCell(String(runtimeSnapshot.eventId), "code"));
+  const bridgeEventRows: DashboardTableRow[] = [];
   pushRow(
-    diagnosticsRows,
-    "endpoint-health",
-    "Health API",
-    asLinkCell("health", toBridgeEndpoint("/health"), "code"),
+    bridgeEventRows,
+    "events-route",
+    "Events route",
+    asTextCell(`${bridgeRoute("/events")}`, "code"),
   );
   pushRow(
-    diagnosticsRows,
-    "endpoint-state",
-    "State API",
-    asLinkCell("state", toBridgeEndpoint("/state"), "code"),
-  );
-  pushRow(
-    diagnosticsRows,
-    "endpoint-runtime",
-    "Runtime API",
-    asLinkCell("runtime/status", toBridgeEndpoint("/runtime/status"), "code"),
-  );
-  pushRow(
-    diagnosticsRows,
-    "endpoint-events",
-    "Events stream",
-    asTextCell(`${toBridgeEndpoint("/events")}`, "code"),
-  );
-  const connectionRows: DashboardTableRow[] = [];
-  pushRow(
-    connectionRows,
+    bridgeEventRows,
     "connection",
     "Event connection",
     asBadgeCell(
@@ -488,58 +517,103 @@ export function buildRuntimeSections(input: {
       resolveStoreConnectionBadgeVariant(runtimeSnapshot.connection),
     ),
   );
+  pushRow(
+    bridgeEventRows,
+    "event-id",
+    "Latest event ID",
+    asTextCell(String(runtimeSnapshot.eventId), "code"),
+  );
   if (runtimeSnapshot.updatedAt) {
     pushRow(
-      connectionRows,
+      bridgeEventRows,
       "snapshot-time",
-      "Last snapshot",
+      "Last state sync",
       asTextCell(formatDate(runtimeSnapshot.updatedAt), "muted"),
     );
   }
   pushRow(
-    connectionRows,
+    bridgeEventRows,
     "action",
     "Active action",
-    asTextCell(
-      runtimeSnapshot.action
-        ? `${runtimeSnapshot.action.charAt(0).toUpperCase()}${runtimeSnapshot.action.slice(1)}`
-        : "None",
-      runtimeSnapshot.action ? "default" : "muted",
-    ),
+    runtimeSnapshot.action
+      ? asBadgeCell(formatActionName(runtimeSnapshot.action), "warning")
+      : asTextCell("None", "muted"),
   );
   if (runtimeSnapshot.error) {
     pushRow(
-      connectionRows,
-      "store-error",
-      "Store error",
+      bridgeEventRows,
+      "event-error",
+      "Event stream error",
       asTextCell(runtimeSnapshot.error),
     );
   }
+  if (capabilities?.wsSubprotocol) {
+    pushRow(
+      bridgeEventRows,
+      "required-subprotocol",
+      "Required subprotocol",
+      asTextCell(capabilities.wsSubprotocol, "code"),
+    );
+  }
 
-  const runtimeRows: DashboardTableRow[] = [];
+  const runtimeControlRows: DashboardTableRow[] = [];
   pushRow(
-    runtimeRows,
+    runtimeControlRows,
+    "status-route",
+    "Status route",
+    asLinkCell("GET /runtime/status", bridgeRoute("/runtime/status"), "code"),
+  );
+  pushRow(
+    runtimeControlRows,
+    "start-route",
+    "Start route",
+    asTextCell("POST /runtime/start", "code"),
+  );
+  pushRow(
+    runtimeControlRows,
+    "restart-route",
+    "Restart route",
+    asTextCell("POST /runtime/restart", "code"),
+  );
+  pushRow(
+    runtimeControlRows,
+    "stop-route",
+    "Stop route",
+    asTextCell("POST /runtime/stop", "code"),
+  );
+  pushRow(
+    runtimeControlRows,
     "phase",
     "Phase",
     phase
       ? asBadgeCell(formatPhase(phase), resolveRuntimePhaseBadgeVariant(phase))
       : asTextCell("Unavailable", "muted"),
   );
-  if (runtime?.pid) {
-    pushRow(runtimeRows, "pid", "PID", asTextCell(String(runtime.pid), "code"));
-  }
   if (runtime?.url) {
-    pushRow(runtimeRows, "url", "URL", asTextCell(runtime.url, "code"));
+    pushRow(
+      runtimeControlRows,
+      "url",
+      "Runtime base URL",
+      asLinkCell(runtime.url, runtime.url, "code"),
+    );
+  }
+  if (runtime?.pid) {
+    pushRow(
+      runtimeControlRows,
+      "pid",
+      "PID",
+      asTextCell(String(runtime.pid), "code"),
+    );
   }
   if (runtime?.startedAt) {
     pushRow(
-      runtimeRows,
+      runtimeControlRows,
       "started",
       "Started",
       asTextCell(formatDate(runtime.startedAt), "muted"),
     );
     pushRow(
-      runtimeRows,
+      runtimeControlRows,
       "uptime",
       "Uptime",
       asTextCell(formatUptime(runtime.startedAt, now), "muted"),
@@ -547,54 +621,43 @@ export function buildRuntimeSections(input: {
   }
   if (runtime?.lastError) {
     pushRow(
-      runtimeRows,
+      runtimeControlRows,
       "last-error",
       "Last error",
       asTextCell(runtime.lastError),
     );
   }
-
-  const capabilityRows: DashboardTableRow[] = [];
   if (capabilities) {
-    pushRow(
-      capabilityRows,
-      "command-host",
-      "Command host",
-      asTextCell(capabilities.commandHost),
-    );
-    pushRow(
-      capabilityRows,
-      "ws-subprotocol",
-      "WS subprotocol",
-      asTextCell(capabilities.wsSubprotocol, "code"),
-    );
-
     const actions = [
       capabilities.canStartRuntime ? "start" : null,
       capabilities.canRestartRuntime ? "restart" : null,
       capabilities.canStopRuntime ? "stop" : null,
     ].filter(Boolean) as string[];
-
-    const actionText = actions.join(", ") || "none";
+    const actionText = actions.map(formatActionName).join(", ") || "None";
     pushRow(
-      capabilityRows,
-      "actions",
-      "Actions",
-      asTextCell(actionText, "code"),
+      runtimeControlRows,
+      "runtime-control",
+      "Runtime control",
+      asBadgeCell(
+        capabilities.hasRuntimeControl ? "Available" : "Unavailable",
+        resolveAvailabilityBadgeVariant(capabilities.hasRuntimeControl),
+      ),
     );
-
-    if (actionText === "none") {
+    pushRow(
+      runtimeControlRows,
+      "actions",
+      "Supported actions",
+      asTextCell(actionText),
+    );
+    pushRow(
+      runtimeControlRows,
+      "command-host",
+      "Command host",
+      asTextCell(capabilities.commandHost, "code"),
+    );
+    if (actions.length === 0 && capabilities.fallbackCommand) {
       pushRow(
-        capabilityRows,
-        "runtime-control",
-        "Runtime control",
-        asTextCell(capabilities.hasRuntimeControl ? "Yes" : "No"),
-      );
-    }
-
-    if (actionText === "none" && capabilities.fallbackCommand) {
-      pushRow(
-        capabilityRows,
+        runtimeControlRows,
         "fallback-command",
         "Fallback cmd",
         asTextCell(capabilities.fallbackCommand, "code"),
@@ -602,38 +665,91 @@ export function buildRuntimeSections(input: {
     }
   }
 
+  const runtimeWebSocketRows: DashboardTableRow[] = [];
+  pushRow(
+    runtimeWebSocketRows,
+    "gateway-route",
+    "Gateway route",
+    asTextCell(`${bridgeRoute("/runtime/ws")}`, "code"),
+  );
+  pushRow(
+    runtimeWebSocketRows,
+    "capability",
+    "Capability",
+    asBadgeCell(
+      capabilities?.hasRuntimeWebSocketGateway ? "Available" : "Unavailable",
+      resolveAvailabilityBadgeVariant(
+        capabilities?.hasRuntimeWebSocketGateway ?? false,
+      ),
+    ),
+  );
+  pushRow(
+    runtimeWebSocketRows,
+    "client-helper",
+    "Client helper",
+    asTextCell("getRuntimeWebSocketUrl()", "code"),
+  );
+  pushRow(
+    runtimeWebSocketRows,
+    "query-forwarding",
+    "Query forwarding",
+    asTextCell("Preserved"),
+  );
+  pushRow(
+    runtimeWebSocketRows,
+    "frame-forwarding",
+    "Frame forwarding",
+    asTextCell("Opaque text/binary"),
+  );
+  pushRow(
+    runtimeWebSocketRows,
+    "subprotocol-forwarding",
+    "Subprotocols",
+    asTextCell("Forwarded"),
+  );
+  pushRow(
+    runtimeWebSocketRows,
+    "runtime-parsing",
+    "Payload parsing",
+    asTextCell("None"),
+  );
+  pushRow(
+    runtimeWebSocketRows,
+    "reconnect-replay",
+    "Reconnect/replay",
+    asTextCell("None"),
+  );
+
   const sections: DashboardRuntimeSection[] = [
     controls,
     {
-      id: "runtime",
-      title: "Runtime",
-      rows: runtimeRows,
+      id: "runtime-control",
+      title: "Runtime Control",
+      description:
+        "Shows whether the runtime is running and can be controlled.",
+      rows: runtimeControlRows,
     } satisfies DashboardTableSection,
     {
-      id: "bridge",
-      title: "Bridge",
-      rows: bridgeRows,
+      id: "bridge-state",
+      title: "Bridge State",
+      description:
+        "Shows whether the bridge is alive and which instance is active.",
+      rows: bridgeStateRows,
     } satisfies DashboardTableSection,
     {
-      id: "connection",
-      title: "Connection",
-      rows: connectionRows,
+      id: "bridge-events",
+      title: "Bridge Events",
+      description:
+        "Shows the dashboard's bridge event subscription and latest event.",
+      rows: bridgeEventRows,
+    } satisfies DashboardTableSection,
+    {
+      id: "runtime-websocket",
+      title: "Runtime WebSocket Gateway",
+      description: "Shows whether browser WebSockets can proxy to the runtime.",
+      rows: runtimeWebSocketRows,
     } satisfies DashboardTableSection,
   ];
-
-  if (capabilityRows.length > 0) {
-    sections.push({
-      id: "capabilities",
-      title: "Capabilities",
-      rows: capabilityRows,
-    });
-  }
-  sections.push({
-    id: "diagnostics",
-    title: "Diagnostics",
-    rows: diagnosticsRows,
-  });
-
   return {
     summary: resolveDashboardStatusSummary(live),
     sections,

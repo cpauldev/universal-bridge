@@ -1,9 +1,7 @@
 import { resolveClientAutoMount } from "universal-bridge/client-runtime";
 
-import {
-  OVERLAY_INSTANCE_GLOBAL_KEY,
-  OVERLAY_MODULE_SPECIFIER,
-} from "./constants.js";
+import { OVERLAY_MODULE_SPECIFIER } from "../overlay-config.js";
+import { OVERLAY_INSTANCE_GLOBAL_KEY } from "./constants.js";
 import { UniversalOverlay } from "./overlay.js";
 import type { OverlayMountOptions } from "./types.js";
 
@@ -72,9 +70,7 @@ function getOverlayFlagKey(suffix: "disabled" | "enabled"): string {
 function getGlobalOverlayInstance(): OverlayInstanceLike | null {
   if (!isBrowserRuntime()) return overlayInstance;
   const globalInstance = getOverlayWindow()[OVERLAY_INSTANCE_GLOBAL_KEY] as
-    | OverlayInstanceLike
-    | null
-    | undefined;
+    OverlayInstanceLike | null | undefined;
   if (globalInstance && !overlayInstance)
     overlayInstance = globalInstance as UniversalOverlay;
   return globalInstance ?? null;

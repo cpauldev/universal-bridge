@@ -10,12 +10,14 @@ import type {
 } from "universal-bridge/preset";
 import { fileURLToPath } from "url";
 
-const OVERLAY_BRIDGE_PATH_PREFIX = "/__universal/universal-overlay";
-const OVERLAY_RUNTIME_HEALTH_PATH = "/api/version";
-const OVERLAY_RUNTIME_PORT_ENV_VAR = "UNIVERSAL_OVERLAY_RUNTIME_PORT";
-const OVERLAY_RUNTIME_FALLBACK_COMMAND = "universal-overlay dev";
-const OVERLAY_INSTANCE_ID_FALLBACK = "universal-overlay";
-const OVERLAY_CONFIG_PACKAGE_NAME = "universal-overlay";
+import {
+  OVERLAY_BRIDGE_PATH_PREFIX,
+  OVERLAY_PACKAGE_NAME,
+  OVERLAY_RUNTIME_FALLBACK_COMMAND,
+  OVERLAY_RUNTIME_PORT_ENV_VAR,
+  OVERLAY_RUNTIME_WS_PATH,
+} from "../overlay-config.js";
+import { RUNTIME_HEALTH_PATH } from "../runtime/routes.js";
 
 type OverlayInstanceOptions = {
   id?: string;
@@ -62,7 +64,7 @@ function sanitizeInstanceId(value: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9._-]+/g, "-")
     .replace(/^-+|-+$/g, "");
-  return normalized || OVERLAY_INSTANCE_ID_FALLBACK;
+  return normalized || OVERLAY_PACKAGE_NAME;
 }
 
 function deriveDefaultInstanceId(cwd?: string): string {
@@ -92,7 +94,7 @@ function resolveOverlayRuntimeOptions(
     ...options,
     command: resolvedCommand.command,
     args: resolvedCommand.args,
-    healthPath: options.healthPath ?? OVERLAY_RUNTIME_HEALTH_PATH,
+    healthPath: options.healthPath ?? RUNTIME_HEALTH_PATH,
     runtimePortEnvVar:
       options.runtimePortEnvVar ?? OVERLAY_RUNTIME_PORT_ENV_VAR,
   };
@@ -107,13 +109,17 @@ export function resolveOverlayBridgeOptions(
   return {
     ...resolveOverlayRuntimeOptions(options),
     bridgePathPrefix: OVERLAY_BRIDGE_PATH_PREFIX,
+    runtimeWebSocketGateway: { path: OVERLAY_RUNTIME_WS_PATH },
     fallbackCommand:
       options.fallbackCommand ?? OVERLAY_RUNTIME_FALLBACK_COMMAND,
     instance,
   } as UniversalBridgeOptions;
 }
 
-export type UniversalOverlayOptions = Omit<UniversalPresetOptions, "identity"> & {
+export type UniversalOverlayOptions = Omit<
+  UniversalPresetOptions,
+  "identity"
+> & {
   identity?: Omit<UniversalPresetIdentity, "packageName"> & {
     packageName?: string;
   };
@@ -133,10 +139,11 @@ export function resolveUniversalOverlayOptions(
   const resolvedRuntime = resolveOverlayRuntimeOptions(runtimeOptions);
   return {
     ...resolvedRuntime,
+    runtimeWebSocketGateway: { path: OVERLAY_RUNTIME_WS_PATH },
     fallbackCommand:
       runtimeOptions.fallbackCommand ?? OVERLAY_RUNTIME_FALLBACK_COMMAND,
     identity: {
-      packageName: identity?.packageName ?? OVERLAY_CONFIG_PACKAGE_NAME,
+      packageName: identity?.packageName ?? OVERLAY_PACKAGE_NAME,
       ...(identity?.variant ? { variant: identity.variant } : {}),
     },
     ...(unsafeOverrides ? { unsafeOverrides } : {}),

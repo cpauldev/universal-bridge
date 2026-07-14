@@ -1,9 +1,5 @@
 export type UniversalRuntimePhase =
-  | "stopped"
-  | "starting"
-  | "running"
-  | "stopping"
-  | "error";
+  "stopped" | "starting" | "running" | "stopping" | "error";
 
 export type UniversalProtocolVersion = "2";
 
@@ -43,6 +39,7 @@ export interface UniversalBridgeCapabilities {
   canStartRuntime: boolean;
   canRestartRuntime: boolean;
   canStopRuntime: boolean;
+  hasRuntimeWebSocketGateway: boolean;
   fallbackCommand: string;
   wsSubprotocol: string;
   supportedProtocolVersions: UniversalProtocolVersion[];

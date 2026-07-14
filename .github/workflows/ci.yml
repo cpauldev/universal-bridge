@@ -44,11 +44,11 @@ jobs:
       - name: Docs Sync Check
         run: bun run docs:check
 
-      - name: Test
-        run: bun test
-
       - name: Build
         run: bun run build
+
+      - name: Test
+        run: bun test
 
       - name: Pack Dry Run
         run: npm pack --dry-run
